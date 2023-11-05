@@ -1,0 +1,29 @@
+# General
+*.pyc
+*.pyo
+__pycache__/
+*.pyc
+
+# Environment and IDE files
+venv/
+.idea/
+.python-version
+
+# Compiled files
+*.pyc
+*.pyo
+*.pyd
+*.pyc/
+__pycache__/
+
+# Log files
+*.log
+
+# Dependency directories
+env/
+lib/
+build/
+dist/
+
+# macOS specific files
+.DS_Store
