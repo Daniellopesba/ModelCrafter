@@ -1,7 +1,6 @@
 import numpy as np
 import time
-from least_squares import AnalyticalLeastSquaresRegression, MatrixLeastSquaresRegression
-
+from ..least_squares import AnalyticalLeastSquaresRegression, MatrixLeastSquaresRegression
 
 def generate_data(n):
     """
