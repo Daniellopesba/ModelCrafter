@@ -38,7 +38,6 @@ class AbstractLeastSquaresRegression(ABC):
         """
         return self.a, self.b
 
-
 class AnalyticalLeastSquaresRegression(AbstractLeastSquaresRegression):
     """
     Analytical method implementation of least squares regression.
