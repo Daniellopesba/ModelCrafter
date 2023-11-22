@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
+from memory_profiler import profile
 
 
 class AbstractLeastSquaresRegression(ABC):
@@ -38,6 +39,7 @@ class AbstractLeastSquaresRegression(ABC):
         """
         return self.a, self.b
 
+
 class AnalyticalLeastSquaresRegression(AbstractLeastSquaresRegression):
     """
     Analytical method implementation of least squares regression.
@@ -65,24 +67,64 @@ class AnalyticalLeastSquaresRegression(AbstractLeastSquaresRegression):
 
 class MatrixLeastSquaresRegression(AbstractLeastSquaresRegression):
     """
-    Matrix-based method implementation of least squares regression.
+    Solves the least squares regression problem using the Normal Equation approach.
+
+    The Normal Equation is an analytical solution to the ordinary least squares method for
+    linear regression.
+
+    The equation is beta = (X^TX)^(-1)X^TY, where:
+    - X is the matrix of input features and a column of ones ,
+    - Y is the vector of target values ,
+    - beta is the vector of calculated regression coefficients.
+
+    This method assumes that (X^TX) is non-singular and invertible, which can be computationally
+    intensive and may lead to numerical instability if the matrix is poorly conditioned.
+
+    Performance Notes:
+    - Transposing a matrix is a constant-time operation for numpy arrays.
+    - Matrix multiplication is O(n^2.807) using the Strassen Algorithm, which numpy optimizes for.
+    - Inverting a matrix is generally O(n^3) and can be the bottleneck if (X^TX) is large.
+    - Reshaping an array is typically a constant-time operation unless a copy is needed.
+
+    :param X: numpy.ndarray, shape (n_samples, n_features)
+        Matrix of input features, where n_samples is the number of samples and
+        n_features is the number of features.
+
+    :param Y: numpy.ndarray, shape (n_samples,) or (n_samples, n_targets)
+        Vector of target values. If Y is two-dimensional, its shape should be (n_samples, n_targets).
+
+    :return: numpy.ndarray
+        Vector of regression coefficients (beta).
     """
 
+    # @profile
     def fit(self, x, y):
-        # Transform lists into numpy arrays
-        X = np.vstack((np.ones(len(x)), x)).T
-        Y = np.array(y)
 
-        # Check if the matrix X'X is singular
-        if np.linalg.matrix_rank(np.dot(X.T, X)) < min(X.shape):
-            raise ValueError("The x values are singular and cannot be used for a fit.")
+        # Add a column of ones to X to account for the intercept
+        x = np.hstack((np.ones((x.shape[0], 1)), x))
 
-        # Calculate coefficients using the normal equation
-        # beta = (X'X)^-1 X'Y
-        beta = np.linalg.pinv(X.T @ X) @ X.T @ Y
+        # Step 1.1: Compute X^T (transpose of X)
+        Xt = (
+            x.T
+        )  # Transposing is a cheap operation in terms of computational complexity.
+
+        # Step 1.2: Compute X^T X
+        XtX = Xt @ x  # Matrix multiplication, potentially computationally expensive.
+
+        # Step 2: Compute the inverse of X^T X
+        # This step can be a performance bottleneck and may fail for singular or near-singular matrices.
+        XtX_inv = np.linalg.inv(XtX)
+
+        # Ensure Y is a column vector
+        # This is a reshape operation, which is very efficient in numpy as it returns a new view on the array, if possible.
+        Yt = y.reshape(-1, 1) if len(y.shape) == 1 else y
+
+        # Step 3: Compute (X^T X)^{-1} X^T Y
+        # This matrix multiplication step is the final step in calculating the regression coefficients.
+        beta = XtX_inv @ Xt @ Yt
 
         # Assign coefficients
-        self.a = beta[1]
-        self.b = beta[0]
+        self.b = beta[0, 0]  # The intercept term
+        self.a = beta[1:].flatten()  # Make sure 'a' is a flat array
 
         return self
