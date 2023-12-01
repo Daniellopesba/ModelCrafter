@@ -25,7 +25,6 @@ class TestLeastSquaresRegression(unittest.TestCase):
     #     self.assertAlmostEqual(a[0], 2, places=5)  # Testing the slope
     #     self.assertAlmostEqual(b, 0, places=5)  # Testing the intercept
 
-
     def test_analytical_predict(self):
         model = AnalyticalLeastSquaresRegression()
         model.fit(self.x, self.y)

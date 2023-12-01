@@ -99,7 +99,6 @@ class MatrixLeastSquaresRegression(AbstractLeastSquaresRegression):
 
     # @profile
     def fit(self, x, y):
-
         # Add a column of ones to X to account for the intercept
         x = np.hstack((np.ones((x.shape[0], 1)), x))
 
