@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
-from memory_profiler import profile # noqa
+from memory_profiler import profile  # noqa
 
 
 class AbstractLeastSquaresRegression(ABC):
