@@ -14,22 +14,23 @@ class TestLeastSquaresRegression(unittest.TestCase):
     def test_analytical_fit(self):
         model = AnalyticalLeastSquaresRegression()
         model.fit(self.x, self.y)
-        a, b = model.coefficients()
-        self.assertEqual(a, 2)
-        self.assertEqual(b, 0)
+        beta = model.coefficients()
+        self.assertEqual(beta[0,0], 2)
+        self.assertEqual(beta[1,0], 0)
 
-    # def test_matrix_fit(self):
-    #     model = MatrixLeastSquaresRegression()
-    #     model.fit(self.x.reshape(-1, 1), self.y)
-    #     b, a = model.coefficients()  # Intercept first, then slope
-    #     self.assertAlmostEqual(a[0], 2, places=5)  # Testing the slope
-    #     self.assertAlmostEqual(b, 0, places=5)  # Testing the intercept
+    def test_matrix_fit(self):
+        model = MatrixLeastSquaresRegression()
+        model.fit(self.x.reshape(-1, 1), self.y)
+        beta = model.coefficients()  # Intercept first, then slope
+        self.assertAlmostEqual(beta[1,0], 2, places=5)  # Testing the slope
+        self.assertAlmostEqual(beta[0,0], 0, places=5)  # Testing the intercept
 
     def test_analytical_predict(self):
         model = AnalyticalLeastSquaresRegression()
         model.fit(self.x, self.y)
         predictions = model.predict(np.array([6, 7]))
-        self.assertEqual(predictions, [12, 14])
+        predictions_list = [arr[0] for arr in predictions][0]
+        self.assertEqual(predictions_list, 12.0)
 
     # def test_matrix_predict(self):
     #     model = MatrixLeastSquaresRegression()

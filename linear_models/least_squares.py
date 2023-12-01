@@ -9,8 +9,7 @@ class AbstractLeastSquaresRegression(ABC):
     """
 
     def __init__(self):
-        self.a = 0  # Slope
-        self.b = 0  # Intercept
+        self.beta = None  # matrix of coefficients, including intercept
 
     @abstractmethod
     def fit(self, x, y):
@@ -26,9 +25,9 @@ class AbstractLeastSquaresRegression(ABC):
         Returns:
             list of float: The predicted y-coordinates.
         """
-        if self.a is None or self.b is None:
+        if self.beta is None:
             raise ValueError("Model is not fitted yet.")
-        return [self.a * x_i + self.b for x_i in x]
+        return [x @ self.beta]
 
     def coefficients(self):
         """
@@ -37,12 +36,17 @@ class AbstractLeastSquaresRegression(ABC):
         Returns:
             tuple: A tuple containing the slope and intercept (a, b).
         """
-        return self.a, self.b
+        return self.beta
 
 
 class AnalyticalLeastSquaresRegression(AbstractLeastSquaresRegression):
     """
     Analytical method implementation of least squares regression.
+
+    In order to maintain the contract between classes, the fit method of the class will also return
+    a matrix.
+
+    Additionally, this class does not support multivariate analysis.
     """
 
     def fit(self, x, y):
@@ -59,8 +63,10 @@ class AnalyticalLeastSquaresRegression(AbstractLeastSquaresRegression):
         if denominator == 0:
             raise ValueError("The x values are singular and cannot be used for a fit.")
 
-        self.a = (n * sum_xy - sum_x * sum_y) / denominator
-        self.b = (sum_y - self.a * sum_x) / n
+        a = (n * sum_xy - sum_x * sum_y) / denominator
+        b = (sum_y - a * sum_x) / n
+
+        self.beta = np.column_stack([a, b]).T
 
         return self
 
@@ -120,10 +126,6 @@ class MatrixLeastSquaresRegression(AbstractLeastSquaresRegression):
 
         # Step 3: Compute (X^T X)^{-1} X^T Y
         # This matrix multiplication step is the final step in calculating the regression coefficients.
-        beta = XtX_inv @ Xt @ Yt
-
-        # Assign coefficients
-        self.b = beta[0, 0]  # The intercept term
-        self.a = beta[1:].flatten()  # Make sure 'a' is a flat array
+        self.beta = XtX_inv @ Xt @ Yt
 
         return self
