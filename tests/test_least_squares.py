@@ -15,15 +15,15 @@ class TestLeastSquaresRegression(unittest.TestCase):
         model = AnalyticalLeastSquaresRegression()
         model.fit(self.x, self.y)
         beta = model.coefficients()
-        self.assertEqual(beta[0,0], 2)
-        self.assertEqual(beta[1,0], 0)
+        self.assertEqual(beta[0, 0], 2)
+        self.assertEqual(beta[1, 0], 0)
 
     def test_matrix_fit(self):
         model = MatrixLeastSquaresRegression()
         model.fit(self.x.reshape(-1, 1), self.y)
         beta = model.coefficients()  # Intercept first, then slope
-        self.assertAlmostEqual(beta[1,0], 2, places=5)  # Testing the slope
-        self.assertAlmostEqual(beta[0,0], 0, places=5)  # Testing the intercept
+        self.assertAlmostEqual(beta[1, 0], 2, places=5)  # Testing the slope
+        self.assertAlmostEqual(beta[0, 0], 0, places=5)  # Testing the intercept
 
     def test_analytical_predict(self):
         model = AnalyticalLeastSquaresRegression()
