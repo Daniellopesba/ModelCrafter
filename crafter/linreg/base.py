@@ -38,6 +38,61 @@ class BaseLinearRegressionModel:
         X_np = self.process_X(X)
         return np.dot(X_np, self.coefficients)
 
+    def evaluate(self, X, y):
+        """
+        Evaluates the model on the test data and returns the mean prediction error.
+
+        Parameters:
+        X_test: pandas DataFrame
+            Test features
+        y_test: pandas Series or DataFrame
+            Actual outcomes
+
+        Returns:
+        float
+            Mean prediction error
+        """
+        # Process the test data
+        y_test_np = self.process_y(y)
+
+        # Predict using the model
+        predictions = self.predict(X)
+
+        # Calculate mean prediction error
+        mean_error = np.mean(np.abs(predictions - y_test_np))
+        return mean_error
+
+    def evaluate_expected_error(self, X, y):
+        """
+        Evaluates the model on the test data and returns the expected error of the estimate,
+        calculated as the sum of variance of prediction errors and mean prediction error.
+
+        Parameters:
+        X: pandas DataFrame
+            Test features
+        y: pandas Series or DataFrame
+            Actual outcomes
+
+        Returns:
+        float
+            Expected error of the estimate
+        """
+        # Process the test data
+        y_np = self.process_y(y)
+
+        # Predict using the model
+        predictions = self.predict(X)
+
+        # Calculate mean prediction error
+        mean_error = np.mean(np.abs(predictions - y_np))
+
+        # Calculate the variance of the prediction errors
+        variance_of_errors = np.var(predictions - y_np)
+
+        # Calculate expected error
+        expected_error = variance_of_errors + mean_error
+        return expected_error
+
     def get_coefficients(self):
         return self.coefficients
 
