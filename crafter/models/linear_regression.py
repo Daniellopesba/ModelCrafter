@@ -91,10 +91,10 @@ class LinearRegression(BaseModel):
 
         mse = np.mean(residuals**2)
         se = np.sqrt(mse * np.linalg.inv(self.X_fit.T @ self.X_fit).diagonal())
-        t_stats = self.coefficients.flatten() / se
+        z_stats = self.coefficients.flatten() / se
         p_values = [
             2 * (1 - stats.t.cdf(np.abs(t), df=n - len(self.coefficients)))
-            for t in t_stats
+            for t in z_stats
         ]
         confidence_intervals = [
             (coef - 1.96 * std_err, coef + 1.96 * std_err)
@@ -102,7 +102,7 @@ class LinearRegression(BaseModel):
         ]
 
         # Header
-        header = f"{'Feature':<20} | {'Coefficients':<15} | {'Std Err':<10} | {'t':<10} | {'P>|t|':<10} | {'[0.025':<10}| {'0.975]':<10}"
+        header = f"{'Feature':<20} | {'Coefficients':<15} | {'Std Err':<10} | {'z':<10} | {'P>|z|':<10} | {'[0.025':<10}| {'0.975]':<10}"
         print(header)
         print("=" * len(header))
 
@@ -111,8 +111,21 @@ class LinearRegression(BaseModel):
             coef_str = (
                 f"{self.coefficients[i, 0]:.4f}" if i < len(self.coefficients) else ""
             )
-            row = f"{name:<20} | {coef_str:<15} | {se[i]:<10.4f} | {t_stats[i]:<10.4f} | {p_values[i]:<10.4f} | [{confidence_intervals[i][0]:.4f}, {confidence_intervals[i][1]:.4f}]"
+            row = f"{name:<20} | {coef_str:<15} | {se[i]:<10.4f} | {z_stats[i]:<10.4f} | {p_values[i]:<10.4f} | [{confidence_intervals[i][0]:.4f}, {confidence_intervals[i][1]:.4f}]"
             print(row)
+
+        # Summary Dataframe
+        summary_df = pd.DataFrame(
+            {
+                "feature": self.feature_names,
+                "coef": self.coefficients.flatten(),
+                "std": se,
+                "z": z_stats,
+                "z_abs": np.abs(z_stats),
+            }
+        )
+
+        return summary_df
 
     def residuals(self):
         """

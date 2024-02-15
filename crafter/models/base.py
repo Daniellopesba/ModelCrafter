@@ -100,7 +100,7 @@ class BaseModel(ABC):
         Provide a summary of the model. This method must be implemented by subclasses.
 
         Returns:
-        - summary (str, dict, or similar): A summary of the model, including details such as model parameters, performance metrics, and any other relevant information.
+        - summary (str, dict, or similar): A summary of the model, including details such as model parameters, performance performance_metrics, and any other relevant information.
 
         Notes:
         - The implementation can vary greatly depending on the model's nature. It might include statistics like R-squared, coefficients, p-values, etc., for statistical models, or architecture details for neural networks.

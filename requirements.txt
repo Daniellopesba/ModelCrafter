@@ -1,10 +1,13 @@
 black
 black[jupyter]
 flake8
-numpy
+numpy~=1.26.3
 pytest
 jupyter
-scikit-learn
-pandas
+scikit-learn~=1.4.0
+pandas~=2.2.0
 pyarrow
-matplotlib
+matplotlib~=3.8.2
+scipy~=1.12.0
+statsmodels~=0.14.1
+tqdm~=4.66.2
