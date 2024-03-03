@@ -121,6 +121,7 @@ class LinearRegression(BaseModel):
                 "coef": self.coefficients.flatten(),
                 "std": se,
                 "z": z_stats,
+                "p_value": p_values,
                 "z_abs": np.abs(z_stats),
             }
         )

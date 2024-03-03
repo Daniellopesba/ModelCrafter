@@ -3,7 +3,7 @@ from tqdm import tqdm
 import numpy as np
 import pandas as pd
 from crafter.models.linear_regression import LinearRegression
-from crafter.performance_metrics.regression_metrics import mse as mean_squared_error
+from crafter.performance_metrics.regression_metrics import MSE as mean_squared_error
 import matplotlib.pyplot as plt
 
 
