@@ -54,7 +54,7 @@ class SubsetSelection:
             model = LinearRegression(fit_intercept=True)
             model.fit(X_subset, self.y)
             y_pred = model.predict(X_subset)
-            rss = mean_squared_error(self.y, y_pred) * len(self.y)
+            rss = mean_squared_error(self.y, y_pred).calculate() * len(self.y)
 
             self.model_evaluations.append(
                 {"subset_size": len(subset), "features": subset, "rss": rss}
