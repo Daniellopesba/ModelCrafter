@@ -3,7 +3,7 @@ from tqdm import tqdm
 import numpy as np
 import pandas as pd
 from crafter.models.linear_regression import LinearRegression
-from crafter.performance_metrics.regression_metrics import MSE as mean_squared_error
+from crafter.performance_metrics.regression_metrics import MSE
 import matplotlib.pyplot as plt
 
 
@@ -26,7 +26,7 @@ class SubsetSelection:
         self.y = y
         self.best_model = None
         self.best_features = None
-        self.best_rss = np.inf
+        self.best_mse = np.inf
         self.model_evaluations = []
 
     def fit(self):
@@ -54,14 +54,19 @@ class SubsetSelection:
             model = LinearRegression(fit_intercept=True)
             model.fit(X_subset, self.y)
             y_pred = model.predict(X_subset)
-            rss = mean_squared_error(self.y, y_pred).calculate() * len(self.y)
+            mse = MSE(self.y, y_pred).calculate()
 
             self.model_evaluations.append(
-                {"subset_size": len(subset), "features": subset, "rss": rss}
+                {"subset_size": len(subset), "features": subset, "MSE": mse}
             )
 
-            if rss < self.best_rss:
-                self.best_rss = rss
+            # Debugging print statements
+            print(f"Evaluating subset: {subset}")
+            print(f"RSS for current subset: {mse}")
+            print(f"Best RSS before update: {self.best_mse}")
+
+            if mse < self.best_mse:
+                self.best_mse = mse
                 self.best_features = subset
                 self.best_model = model
         except Exception as e:
@@ -95,7 +100,7 @@ class Visualization:
         plt.figure(figsize=(10, 6))
         for size, group in analysis_df.groupby("subset_size"):
             plt.scatter(
-                [size] * len(group), group["rss"], alpha=0.5, label=f"Size {size}"
+                [size] * len(group), group["MSE"], alpha=0.5, label=f"Size {size}"
             )
 
         plt.xlabel("Subset Size")
