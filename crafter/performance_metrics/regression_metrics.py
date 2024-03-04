@@ -47,6 +47,7 @@ class MetricCalculator:
         # Placeholder for the abstract method
         raise NotImplementedError("Subclasses should implement this method.")
 
+
 class MPE(MetricCalculator):
     """
     Calculates the Mean Percentage Error (MPE) between true and predicted values.
@@ -74,7 +75,9 @@ class MPE(MetricCalculator):
             float: The MPE value.
         """
         # Adjust true values to avoid division by zero
-        y_true_adjusted = np.where(self.y_true == 0, self.y_true + self.offset, self.y_true)
+        y_true_adjusted = np.where(
+            self.y_true == 0, self.y_true + self.offset, self.y_true
+        )
         percentage_errors = ((self.y_pred - y_true_adjusted) / y_true_adjusted) * 100
         return np.mean(percentage_errors)
 
