@@ -6,7 +6,7 @@ from crafter.models.linear_regression import LinearRegression
 from crafter.performance_metrics.regression_metrics import MSE
 import matplotlib.pyplot as plt
 
-
+# FIXME: Allow the user to provide the target metric as input
 class SubsetSelection:
     """
     This class handles the fitting of linear regression models for all possible subsets of a given set of predictors,
@@ -18,7 +18,7 @@ class SubsetSelection:
     - best_model (LinearRegression): Best model found.
     - best_features (tuple): Best subset of features.
     - best_rss (float): RSS of the best model.
-    - model_evaluations (list): Records of model evaluations.
+    - model_evaluations (List): Records of model evaluations.
     """
 
     def __init__(self, X, y):
@@ -42,6 +42,17 @@ class SubsetSelection:
                 for subset in combinations(self.X.columns, k):
                     self.evaluate_subset(subset, pbar)
 
+        model_evaluations_df = pd.DataFrame(self.model_evaluations)
+        best_model_settings = model_evaluations_df[
+            model_evaluations_df["MSE"] == model_evaluations_df["MSE"].min()
+        ]
+        self.best_mse = best_model_settings["MSE"]
+        self.best_features = best_model_settings["features"]
+        #FIXME: ENABLEMODEL RETURN
+        # self.best_model = LinearRegression(fit_intercept=True).fit(
+        #     self.X[self.best_features], self.y
+        # )
+
     def evaluate_subset(self, subset, pbar):
         """Evaluates a single subset of predictors, fitting a model and updating the best model if necessary.
 
@@ -57,18 +68,8 @@ class SubsetSelection:
             mse = MSE(self.y, y_pred).calculate()
 
             self.model_evaluations.append(
-                {"subset_size": len(subset), "features": subset, "MSE": mse}
+                {"subset_size": len(subset), "features": list(subset), "MSE": mse}
             )
-
-            # Debugging print statements
-            print(f"Evaluating subset: {subset}")
-            print(f"RSS for current subset: {mse}")
-            print(f"Best RSS before update: {self.best_mse}")
-
-            if mse < self.best_mse:
-                self.best_mse = mse
-                self.best_features = subset
-                self.best_model = model
         except Exception as e:
             print(f"Error fitting model with features {subset}: {e}")
         finally:
