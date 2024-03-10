@@ -3,10 +3,9 @@ from tqdm import tqdm
 import numpy as np
 import pandas as pd
 from crafter.models.linear_regression import LinearRegression
-from crafter.performance_metrics.regression_metrics import MSE
 import matplotlib.pyplot as plt
 
-# FIXME: Allow the user to provide the target metric as input
+
 class SubsetSelection:
     """
     This class handles the fitting of linear regression models for all possible subsets of a given set of predictors,
@@ -21,37 +20,44 @@ class SubsetSelection:
     - model_evaluations (List): Records of model evaluations.
     """
 
-    def __init__(self, X, y):
-        self.X = X
-        self.y = y
+    def __init__(self, X_train, y_train, X_test, y_test, metric):
+        self.X_train = X_train
+        self.y_train = y_train
+        self.X_test = X_test
+        self.y_test = y_test
+        self.metric = metric
         self.best_model = None
         self.best_features = None
-        self.best_mse = np.inf
+        self.best_metric_value = np.inf
         self.model_evaluations = []
 
     def fit(self):
         """Fits models for all subsets of predictors and updates attributes with the best subset found."""
-        n_features = self.X.shape[1]
+        n_features = self.X_train.shape[1]
         total_models = sum(
-            1 for _ in range(1, n_features + 1) for _ in combinations(self.X.columns, _)
+            1
+            for _ in range(1, n_features + 1)
+            for _ in combinations(self.X_train.columns, _)
         )
         print(f"Total models to fit: {total_models}")
 
         with tqdm(total=total_models, desc="Fitting Models", leave=True) as pbar:
             for k in range(1, n_features + 1):
-                for subset in combinations(self.X.columns, k):
+                for subset in combinations(self.X_train.columns, k):
                     self.evaluate_subset(subset, pbar)
 
         model_evaluations_df = pd.DataFrame(self.model_evaluations)
         best_model_settings = model_evaluations_df[
-            model_evaluations_df["MSE"] == model_evaluations_df["MSE"].min()
+            model_evaluations_df["Metric Value"]
+            == model_evaluations_df["Metric Value"].min()
         ]
-        self.best_mse = best_model_settings["MSE"]
-        self.best_features = best_model_settings["features"]
-        #FIXME: ENABLEMODEL RETURN
-        # self.best_model = LinearRegression(fit_intercept=True).fit(
-        #     self.X[self.best_features], self.y
-        # )
+        self.best_metric_value = best_model_settings["Metric Value"].iloc[0]
+        self.best_features = best_model_settings["features"].iloc[0]
+
+        # Refitting the best model on the entire training set using the best subset of features
+        self.best_model = LinearRegression(fit_intercept=True).fit(
+            self.X_train[self.best_features], self.y_train
+        )
 
     def evaluate_subset(self, subset, pbar):
         """Evaluates a single subset of predictors, fitting a model and updating the best model if necessary.
@@ -61,15 +67,27 @@ class SubsetSelection:
         - pbar (tqdm.std.tqdm): Progress bar instance for visual feedback.
         """
         try:
-            X_subset = self.X[list(subset)]
+            X_subset_train = self.X_train[list(subset)]
+            X_subset_test = self.X_test[list(subset)]
             model = LinearRegression(fit_intercept=True)
-            model.fit(X_subset, self.y)
-            y_pred = model.predict(X_subset)
-            mse = MSE(self.y, y_pred).calculate()
+            model.fit(X_subset_train, self.y_train)
+            y_pred = model.predict(X_subset_test)
+
+            metric_instance = self.metric(
+                self.y_test, y_pred
+            )  # Creates an instance of the metric class
+            metric_value = (
+                metric_instance.calculate()
+            )  # Now, this should be a numeric value
 
             self.model_evaluations.append(
-                {"subset_size": len(subset), "features": list(subset), "MSE": mse}
+                {
+                    "subset_size": len(subset),
+                    "features": list(subset),
+                    "Metric Value": metric_value,  # This is now a numeric value
+                }
             )
+
         except Exception as e:
             print(f"Error fitting model with features {subset}: {e}")
         finally:
@@ -78,7 +96,7 @@ class SubsetSelection:
 
 class AnalyticalInsights:
     """
-    Generates and stores analytical insights from model evaluations, such as RSS values for all subsets.
+    Generates and stores analytical insights from model evaluations, such as metric values for all subsets.
 
     Attributes:
     - model_evaluations (list): List of dictionaries containing model evaluation metrics.
@@ -96,16 +114,22 @@ class Visualization:
     """Provides methods for visualizing model evaluation results."""
 
     @staticmethod
-    def plot_rss_by_subset_size(analysis_df):
-        """Plots the RSS for all models by subset size."""
+    def plot_metric_by_subset_size(analysis_df, metric_name="Metric Value"):
+        """
+        Plots the specified metric for all models by subset size.
+
+        Parameters:
+        - analysis_df (pd.DataFrame): DataFrame containing model evaluation results.
+        - metric_name (str): The name of the metric to plot. Defaults to "Metric Value".
+        """
         plt.figure(figsize=(10, 6))
         for size, group in analysis_df.groupby("subset_size"):
             plt.scatter(
-                [size] * len(group), group["MSE"], alpha=0.5, label=f"Size {size}"
+                [size] * len(group), group[metric_name], alpha=0.5, label=f"Size {size}"
             )
 
         plt.xlabel("Subset Size")
-        plt.ylabel("RSS")
-        plt.title("RSS of All Subset Models by Size")
+        plt.ylabel(metric_name)
+        plt.title(f"{metric_name} of All Subset Models by Size")
         plt.legend()
         plt.show()

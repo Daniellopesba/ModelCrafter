@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch  # noqa
 import numpy as np
 from crafter.performance_metrics.regression_metrics import MPE, MSE, R2
 
