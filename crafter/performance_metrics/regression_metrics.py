@@ -73,8 +73,9 @@ class MSE(MetricCalculator):
 
 class MPE(MetricCalculator):
     def __init__(self, y_true, y_pred, offset=1e-6, **kwargs):
-        super().__init__(y_true, y_pred, **kwargs)
+        # offset must be set before super().__init__, which eagerly calls calculate()
         self.offset = offset
+        super().__init__(y_true, y_pred, **kwargs)
 
     def calculate(self):
         y_true_adjusted = np.where(

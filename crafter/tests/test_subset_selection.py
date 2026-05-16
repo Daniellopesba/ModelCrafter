@@ -1,72 +1,73 @@
 import unittest
-from unittest.mock import patch
-import pandas as pd
 import numpy as np
+import pandas as pd
 from crafter.regularization.subset_selection import SubsetSelection, AnalyticalInsights
+from crafter.performance_metrics.regression_metrics import MSE
+from crafter.models.linear_regression import LinearRegression
 
 
 class TestSubsetSelection(unittest.TestCase):
     def setUp(self):
-        # Sample data
-        self.X = pd.DataFrame(
-            {
-                "feature1": np.random.rand(10),
-                "feature2": np.random.rand(10),
-                "feature3": np.random.rand(10),
-            }
-        )
-        self.y = pd.Series(np.random.rand(10))
+        rng = np.random.default_rng(42)
+        n_train, n_test, n_features = 50, 20, 3
+        true_coef = np.array([1.5, -2.0, 0.0])  # feature3 is irrelevant
 
-    @patch("crafter.models.linear_regression.LinearRegression")
-    def test_fit(self, MockLR):
-        # Mock the LinearRegression to simulate model fitting and prediction
-        mock_rss_values = np.linspace(
-            1, 0.1, 10
-        )  # Decreasing RSS values to simulate model improvement
-        model_instance = MockLR.return_value
-        model_instance.fit.return_value = None
-        # Simulate predictions leading to decreasing RSS values
-        model_instance.predict.side_effect = lambda X: self.y - (
-            np.arange(len(X)) * 0.1
-        )
+        X_train = rng.normal(size=(n_train, n_features))
+        y_train = X_train @ true_coef + rng.normal(scale=0.1, size=n_train)
+        X_test = rng.normal(size=(n_test, n_features))
+        y_test = X_test @ true_coef + rng.normal(scale=0.1, size=n_test)
 
-        selector = SubsetSelection(self.X, self.y)
+        cols = ["feature1", "feature2", "feature3"]
+        self.X_train = pd.DataFrame(X_train, columns=cols)
+        self.y_train = pd.Series(y_train)
+        self.X_test = pd.DataFrame(X_test, columns=cols)
+        self.y_test = pd.Series(y_test)
+
+    def test_fit_selects_a_subset(self):
+        selector = SubsetSelection(
+            self.X_train, self.y_train, self.X_test, self.y_test, MSE
+        )
         selector.fit()
 
-        # Assert that the best model and features are properly identified
-        # The logic assumes that a lower RSS value indicates a better model
-        self.assertIsNotNone(selector.best_model, "The best model should not be None.")
-        self.assertIsNotNone(
-            selector.best_features, "The best features should not be None."
+        self.assertIsInstance(selector.best_model, LinearRegression)
+        self.assertIsNotNone(selector.best_features)
+        self.assertGreater(len(selector.best_features), 0)
+        self.assertTrue(np.isfinite(selector.best_metric_value))
+
+    def test_fit_evaluates_all_non_empty_subsets(self):
+        selector = SubsetSelection(
+            self.X_train, self.y_train, self.X_test, self.y_test, MSE
         )
-        self.assertLess(
-            selector.best_rss, np.inf, "The best RSS should be less than infinity."
+        selector.fit()
+
+        n_features = self.X_train.shape[1]
+        expected_count = 2**n_features - 1
+        self.assertEqual(len(selector.model_evaluations), expected_count)
+
+    def test_best_metric_value_is_minimum(self):
+        selector = SubsetSelection(
+            self.X_train, self.y_train, self.X_test, self.y_test, MSE
         )
-        self.assertTrue(
-            len(selector.best_features) > 0,
-            "The best features set should not be empty.",
-        )
-        self.assertEqual(
-            selector.best_rss,
-            min(mock_rss_values),
-            "The best RSS should be the minimum of the simulated RSS values.",
-        )
+        selector.fit()
+
+        all_values = [m["Metric Value"] for m in selector.model_evaluations]
+        self.assertAlmostEqual(selector.best_metric_value, min(all_values))
 
 
 class TestAnalyticalInsights(unittest.TestCase):
     def test_generate_insights_df(self):
         model_evaluations = [
-            {"subset_size": 1, "features": ("feature1",), "rss": 10},
-            {"subset_size": 2, "features": ("feature1", "feature2"), "rss": 8},
+            {"subset_size": 1, "features": ["feature1"], "Metric Value": 10},
+            {"subset_size": 2, "features": ["feature1", "feature2"], "Metric Value": 8},
         ]
 
         insights = AnalyticalInsights(model_evaluations)
         df = insights.generate_insights_df()
 
         self.assertEqual(len(df), 2)
-        self.assertTrue("subset_size" in df.columns)
-        self.assertTrue("features" in df.columns)
-        self.assertTrue("rss" in df.columns)
+        self.assertIn("subset_size", df.columns)
+        self.assertIn("features", df.columns)
+        self.assertIn("Metric Value", df.columns)
 
 
 if __name__ == "__main__":
