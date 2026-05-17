@@ -1,16 +1,14 @@
 """Validation utilities.
 
-Phase 2 ships the lambda-path helpers only (:func:`lambda_path`,
-:func:`log_grid`) — they're used by the coordinate-descent solver in
-:mod:`model_crafter.solve.coordinate` and (in later phases) by
-:func:`mc.tune` / :func:`mc.nested_cv`.
-
-The rest of the validation/ subpackage (splitters, ``cross_validate``,
-``tune``, ``bootstrap``) lands in Phase 3 (AGENTS.md Task P3.B / P3.C).
+Phase 2 ships the lambda-path helpers (:func:`lambda_path`,
+:func:`log_grid`). Phase 3 adds the bootstrap (:func:`bootstrap`,
+AGENTS.md Task P3.C). Splitters / cross_validate / tune (P3.B) are wired
+in by the integration agent.
 """
 
 from __future__ import annotations
 
+from model_crafter.validation.bootstrap import bootstrap
 from model_crafter.validation.lambda_path import lambda_path, log_grid
 
-__all__ = ["lambda_path", "log_grid"]
+__all__ = ["bootstrap", "lambda_path", "log_grid"]
