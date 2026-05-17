@@ -36,17 +36,7 @@ from model_crafter.assumptions._common import (
 )
 from model_crafter.assumptions._types import CheckResult, Severity
 
-__all__ = [
-    "Homoscedasticity",
-    "Independence",
-    "LowVIF",
-    "ResidualNormality",
-]
-
-
-# ---------------------------------------------------------------------------
 # ResidualNormality
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -153,9 +143,7 @@ class ResidualNormality:
         )
 
 
-# ---------------------------------------------------------------------------
 # Homoscedasticity (Breusch-Pagan)
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -248,9 +236,7 @@ class Homoscedasticity:
         )
 
 
-# ---------------------------------------------------------------------------
 # Independence (Durbin-Watson)
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -325,9 +311,7 @@ class Independence:
         )
 
 
-# ---------------------------------------------------------------------------
 # LowVIF
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)

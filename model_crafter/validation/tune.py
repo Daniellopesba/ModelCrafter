@@ -40,19 +40,7 @@ import pandas as pd
 from model_crafter.solve import solve
 from model_crafter.validation.cross_validate import cross_validate
 
-__all__ = [
-    "NestedCVResult",
-    "TuneResult",
-    "best_mean",
-    "nested_cv",
-    "one_se_rule",
-    "tune",
-]
-
-
-# ---------------------------------------------------------------------------
 # Result dataclasses
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -135,9 +123,7 @@ class NestedCVResult:
         )
 
 
-# ---------------------------------------------------------------------------
 # Selection rules
-# ---------------------------------------------------------------------------
 
 
 def best_mean(curve: pd.DataFrame, direction: str) -> Any:
@@ -211,9 +197,7 @@ def one_se_rule(curve: pd.DataFrame, direction: str) -> Any:
     return eligible.index.max()
 
 
-# ---------------------------------------------------------------------------
 # tune
-# ---------------------------------------------------------------------------
 
 
 def tune(
@@ -315,9 +299,7 @@ def tune(
     )
 
 
-# ---------------------------------------------------------------------------
 # nested_cv — assessment-after-tuning (ESL §7.10.2)
-# ---------------------------------------------------------------------------
 
 
 def nested_cv(
@@ -426,9 +408,7 @@ def nested_cv(
     )
 
 
-# ---------------------------------------------------------------------------
 # Helpers
-# ---------------------------------------------------------------------------
 
 
 def _subset_weights(

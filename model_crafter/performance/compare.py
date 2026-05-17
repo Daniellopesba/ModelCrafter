@@ -1,31 +1,24 @@
-"""``Comparison`` and the ``compare`` orchestration (Task P5.C).
+"""Paired model comparison.
 
-DESIGN.md §3.3 "Model comparison" pins the value type:
+This module hosts two things:
 
-    cmp = mc.compare({"baseline": sol_v1, "challenger": sol_v2},
-                     data=test, weights="sample_weight")
-    print(cmp)
-    # Comparison on test (n=42,193)
-    #
-    #                       baseline    challenger    Δ          p-value
-    #   AUC                 0.8123      0.8217        +0.0094    0.003 (DeLong)
-    #   KS                  0.4781      0.4892        +0.0111    —
-    #   Brier               0.0392      0.0388        −0.0004    —
-    #   Log-loss            0.1564      0.1552        −0.0012    —
-    #   PSI vs train        0.024       0.031         +0.007     —
+1. :func:`delong_test`, the public DeLong (1988) paired AUC test —
+   conceptually a discrimination metric but co-located with its primary
+   consumer because the structural-component variance machinery
+   (:mod:`._delong`) is also what powers the AUC CI inside
+   ``PerformanceReport``.
+2. :func:`compare`, the orchestrator that takes a ``{name: solution}``
+   dict and returns a :class:`Comparison` bundling one
+   :class:`PerformanceReport` per solution plus a square symmetric
+   matrix of pairwise DeLong p-values (NaN diagonal).
 
-The implementation is pure orchestration: for each named solution we
-delegate to :func:`model_crafter.performance.performance`, and for each
-unordered pair we delegate to
-:func:`model_crafter.metrics.classification.delong_test`. The DeLong
-p-value table is square and symmetric, with NaN on the diagonal (a
-model vs itself is not a meaningful pair).
+DESIGN.md §3.3 pins the layout of ``Comparison.__repr__``.
 
-DeLong with non-uniform weights raises ``NotImplementedError`` (P3.D
-limitation — see Pepe 2004 §5.2 for the weighted reformulation). When
-that fires we fall back to an all-NaN ``delong_pvalues`` table; the
-per-solution ``PerformanceReport`` values remain fully populated, so the
-metric table in the ``__repr__`` is still informative.
+DeLong's weighted variant (Pepe 2004 §5.2) is out of v0 scope. With
+non-uniform weights :func:`delong_test` raises ``NotImplementedError``;
+:func:`compare` catches this and emits an all-NaN ``delong_pvalues``
+table while keeping every per-solution :class:`PerformanceReport`
+fully populated.
 """
 
 from __future__ import annotations
@@ -37,36 +30,112 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 
-from model_crafter.metrics.classification import delong_test
+from model_crafter.metrics._common import (
+    check_binary_target,
+    coerce_weights,
+    resolve_scores_and_target,
+)
+from model_crafter.performance._delong import _delong_components
 from model_crafter.performance.report import PerformanceReport, performance
 
-__all__ = ["Comparison", "compare"]
+
+@dataclass(frozen=True, slots=True)
+class DeLongResult:
+    auc_a: float
+    auc_b: float
+    diff: float
+    var_diff: float
+    z: float
+    p_value: float
+    n_pos: int
+    n_neg: int
+
+    def __float__(self) -> float:
+        return float(self.p_value)
+
+    def __repr__(self) -> str:
+        return (
+            f"DeLong test: AUC_a={self.auc_a:.4f}, AUC_b={self.auc_b:.4f}, "
+            f"diff={self.diff:+.4f}, z={self.z:.3f}, p={self.p_value:.4g}  "
+            f"(n_pos={self.n_pos}, n_neg={self.n_neg})"
+        )
 
 
-# ---------------------------------------------------------------------------
-# Value type
-# ---------------------------------------------------------------------------
+def delong_test(
+    sol_a: Any,
+    sol_b: Any,
+    data: pd.DataFrame,
+    *,
+    weights: str | np.ndarray | pd.Series | None = None,
+) -> DeLongResult:
+    """Paired DeLong (1988) AUC comparison on a single held-out set.
+
+    Both solutions are scored on the same rows of ``data``; the target
+    column is read off ``sol_a.spec.target`` and must equal
+    ``sol_b.spec.target``. The numerical reference is Sun & Xu (2014);
+    ``tests/test_metrics.py`` pins us to ``pROC::roc.test`` at 1e-6.
+
+    Non-uniform weights raise :class:`NotImplementedError` — see the
+    module docstring.
+    """
+    if weights is not None:
+        w = coerce_weights(weights, data)
+        if w is not None and not np.allclose(w, w[0]):
+            raise NotImplementedError(
+                "delong_test with non-uniform weights is not implemented in v0; "
+                "use the unweighted DeLong variant. See Pepe (2004) §5.2 for "
+                "the weighted reformulation."
+            )
+    y_a, scores_a = resolve_scores_and_target(sol_a, data)
+    y_b, scores_b = resolve_scores_and_target(sol_b, data)
+    target_a = sol_a.spec.target
+    target_b = sol_b.spec.target
+    if target_a != target_b:
+        raise ValueError(
+            f"sol_a and sol_b must have the same target column; "
+            f"got {target_a!r} and {target_b!r}"
+        )
+    if not np.array_equal(y_a, y_b):
+        raise ValueError(
+            "sol_a and sol_b must be evaluated on the same target vector "
+            "(target arrays disagree on `data`)"
+        )
+    check_binary_target(y_a)
+    auc_a, auc_b, var_diff = _delong_components(scores_a, scores_b, y_a)
+    diff = auc_a - auc_b
+    if var_diff <= 0.0:
+        z = 0.0
+        p = 1.0
+    else:
+        z = diff / float(np.sqrt(var_diff))
+        p = float(2.0 * (1.0 - stats.norm.cdf(abs(z))))
+    pos = int(np.sum(y_a == 1))
+    neg = int(np.sum(y_a == 0))
+    return DeLongResult(
+        auc_a=auc_a,
+        auc_b=auc_b,
+        diff=diff,
+        var_diff=var_diff,
+        z=z,
+        p_value=p,
+        n_pos=pos,
+        n_neg=neg,
+    )
 
 
 @dataclass(frozen=True, slots=True)
 class Comparison:
     """Side-by-side performance bundle for two or more solutions.
 
-    DESIGN.md §3.3 — the comparison value type. The ``reports`` mapping
-    keeps a :class:`PerformanceReport` per named solution; the
+    ``reports`` keeps one :class:`PerformanceReport` per name; the
     ``delong_pvalues`` DataFrame is square, indexed and labelled by
-    solution name, with the diagonal set to ``NaN``.
-
-    See :func:`compare` for the orchestration.
+    solution name, with NaN on the diagonal.
     """
 
     reports: dict[str, PerformanceReport]
     delong_pvalues: pd.DataFrame
-
-    # ------------------------------------------------------------------
-    # repr (DESIGN.md §3.3 "Model comparison")
-    # ------------------------------------------------------------------
 
     def __repr__(self) -> str:  # noqa: PLR0915 — repr layout
         names = list(self.reports.keys())
@@ -77,8 +146,6 @@ class Comparison:
         n = base_report.n_obs
         n_events = base_report.n_events
 
-        # Collect the metric rows: (label, getter) where getter pulls the
-        # raw float (or ``None`` if not available on the sub-report).
         def _auc(r: PerformanceReport) -> float | None:
             return r.discrimination.auc.value
 
@@ -102,7 +169,6 @@ class Comparison:
             ("PSI vs reference", _psi),
         ]
 
-        # Column widths.
         label_w = max(len(label) for label, _ in rows) + 2
         name_w = max(max(len(nm) for nm in names), 10)
         diff_w = 9
@@ -110,7 +176,6 @@ class Comparison:
 
         delong_unavailable = bool(self.delong_pvalues.isna().to_numpy().all())
 
-        # ---- Header ----
         header_parts = [f"{'':<{label_w}}"]
         for nm in names:
             header_parts.append(f"{nm:>{name_w}}  ")
@@ -126,23 +191,19 @@ class Comparison:
             header_line,
         ]
 
-        # ---- Rows ----
         for label, getter in rows:
             cells = [f"  {label:<{label_w - 2}}"]
             base_v = getter(base_report)
-            # Per-solution columns.
             for nm in names:
                 v = getter(self.reports[nm])
                 if v is None:
                     cells.append(f"{'—':>{name_w}}  ")
                 else:
                     cells.append(f"{v:>{name_w}.4f}  ")
-            # Δ column (vs baseline). For the baseline itself we leave blank.
+            # Δ uses solution-2 vs baseline (the §3.3 two-solution layout);
+            # with more than two solutions the full matrix lives in
+            # ``delong_pvalues``.
             if len(names) >= 2 and base_v is not None:
-                # Use the *second* solution as the "challenger" for the Δ
-                # column to match the §3.3 two-solution layout. With more
-                # than two we still show the second-vs-baseline diff and
-                # the full matrix lives in ``delong_pvalues``.
                 challenger_v = getter(self.reports[names[1]])
                 if challenger_v is not None:
                     diff = challenger_v - base_v
@@ -151,7 +212,6 @@ class Comparison:
                     cells.append(f"{'—':>{diff_w}}  ")
             else:
                 cells.append(f"{'—':>{diff_w}}  ")
-            # p-value column — only meaningful for AUC.
             if label == "AUC" and len(names) >= 2 and not delong_unavailable:
                 p = self.delong_pvalues.loc[baseline, names[1]]
                 if isinstance(p, float) and not np.isnan(p):
@@ -162,7 +222,6 @@ class Comparison:
                 cells.append(f"{'—':>{pval_w}}")
             lines.append("".join(cells).rstrip())
 
-        # ---- Footer notes ----
         if delong_unavailable:
             lines.append("")
             lines.append(
@@ -182,7 +241,6 @@ class Comparison:
         if not names:
             return "<div class='mc-comparison'>Comparison(empty)</div>"
 
-        # Build a metric × solution table.
         def _row(label: str, getter) -> str:
             cells = [f"<th>{html.escape(label)}</th>"]
             for nm in names:
@@ -218,20 +276,14 @@ class Comparison:
         )
 
 
-# ---------------------------------------------------------------------------
-# Orchestration
-# ---------------------------------------------------------------------------
-
-
 def _weights_are_uniform(
     weights: str | np.ndarray | pd.Series | None,
     data: pd.DataFrame,
 ) -> bool:
-    """Return True iff ``weights`` would produce a uniform weight vector.
+    """True iff ``weights`` would collapse to a uniform vector.
 
-    ``None`` is uniform by definition. A column or array is uniform when
-    all entries are equal. We probe upfront (mirroring the check inside
-    :func:`delong_test`) so we can decide whether to call DeLong at all.
+    Probed upfront so we can decide whether to call DeLong at all; matches
+    the gate inside :func:`delong_test`.
     """
     if weights is None:
         return True
@@ -250,44 +302,22 @@ def compare(
     *,
     weights: str | np.ndarray | pd.Series | None = None,
 ) -> Comparison:
-    """Side-by-side comparison of two or more fitted solutions on ``data``.
+    """Bundle per-solution :class:`PerformanceReport` values with a pairwise
+    DeLong p-value matrix (DESIGN.md §3.3).
 
-    DESIGN.md §3.3 — the model-comparison entry point.
-
-    Parameters
-    ----------
-    solutions :
-        Mapping of name → fitted ``Solution``-like value. Each solution
-        must produce predictions for every row of ``data`` and share the
-        same target column (verified indirectly by
-        :func:`~model_crafter.metrics.classification.delong_test`).
-    data :
-        A ``pd.DataFrame`` containing the shared target column.
-    weights :
-        Optional sample weights — a column name in ``data`` or an array.
-        Per-solution :class:`PerformanceReport` values respect these
-        weights. DeLong's test is unweighted in v0; with non-uniform
-        weights the pairwise p-value table is filled with NaN and the
-        ``__repr__`` flags the omission.
-
-    Returns
-    -------
-    Comparison
-        ``reports`` carries one :class:`PerformanceReport` per solution;
-        ``delong_pvalues`` is a square symmetric DataFrame of pairwise
-        DeLong p-values (NaN diagonal).
+    Each solution must produce predictions for every row of ``data`` and
+    share a target column. With non-uniform weights the DeLong table is
+    all-NaN — Pepe (2004) §5.2 for the weighted reformulation.
     """
     if not solutions:
         raise ValueError("compare() requires at least one named solution.")
     names = list(solutions.keys())
 
-    # ---- Per-solution PerformanceReports ----
     reports: dict[str, PerformanceReport] = {
         name: performance(sol, data, weights=weights)
         for name, sol in solutions.items()
     }
 
-    # ---- Pairwise DeLong p-values ----
     pvalue_arr = np.full((len(names), len(names)), np.nan, dtype=float)
     if _weights_are_uniform(weights, data):
         for i, j in combinations(range(len(names)), 2):
@@ -296,12 +326,9 @@ def compare(
             try:
                 res = delong_test(sol_a, sol_b, data, weights=weights)
             except NotImplementedError:
-                # Defensive: keep NaN if the primitive ever rejects what
-                # we thought was uniform (e.g. an edge-case probe).
                 continue
             pvalue_arr[i, j] = res.p_value
             pvalue_arr[j, i] = res.p_value
-    # Diagonal stays NaN (a model vs itself is not a meaningful pair).
     name_index = pd.Index(names)
     pvalues = pd.DataFrame(pvalue_arr, index=name_index, columns=name_index)
 

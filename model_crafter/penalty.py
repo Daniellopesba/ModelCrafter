@@ -47,20 +47,7 @@ from typing import Any, Protocol, runtime_checkable
 
 import numpy as np
 
-__all__ = [
-    "L1Penalty",
-    "L2Penalty",
-    "NoPenalty",
-    "Penalty",
-    "PenaltySum",
-    "l1",
-    "l2",
-]
-
-
-# ---------------------------------------------------------------------------
 # Helpers / shared error path
-# ---------------------------------------------------------------------------
 
 
 _TERM_REDIRECT_MSG = (
@@ -105,9 +92,7 @@ def _soft_threshold(x: np.ndarray, t: float) -> np.ndarray:
     return np.sign(x) * np.maximum(np.abs(x) - t, 0.0)
 
 
-# ---------------------------------------------------------------------------
 # Protocol
-# ---------------------------------------------------------------------------
 
 
 @runtime_checkable
@@ -140,9 +125,7 @@ class Penalty(Protocol):
     def __add__(self, other: object) -> Penalty: ...
 
 
-# ---------------------------------------------------------------------------
 # NoPenalty — the identity element (P1.A)
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,9 +177,7 @@ class NoPenalty:
         return hash(("NoPenalty",))
 
 
-# ---------------------------------------------------------------------------
 # L1Penalty
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -253,9 +234,7 @@ class L1Penalty:
         return f"L1Penalty(lam={self.lam!r})"
 
 
-# ---------------------------------------------------------------------------
 # L2Penalty
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -310,9 +289,7 @@ class L2Penalty:
         return f"L2Penalty(lam={self.lam!r})"
 
 
-# ---------------------------------------------------------------------------
 # PenaltySum
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -469,9 +446,7 @@ class PenaltySum:
         return f"PenaltySum(parts={self.parts!r})"
 
 
-# ---------------------------------------------------------------------------
 # Constructors
-# ---------------------------------------------------------------------------
 
 
 def l1(lam: float) -> L1Penalty:
@@ -503,9 +478,7 @@ def l2(lam: float) -> L2Penalty:
     return L2Penalty(lam=lam)
 
 
-# ---------------------------------------------------------------------------
 # Shared addition logic (flattening + identity handling + Term redirect)
-# ---------------------------------------------------------------------------
 
 
 def _penalty_add(left: Penalty, other: object) -> Penalty:

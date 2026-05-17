@@ -30,14 +30,12 @@ from model_crafter.assumptions.woe import (
     WoEMonotonicityPreserved,
 )
 from model_crafter.inspect import binning_table
+from model_crafter.terms.binning import BinningResult, manual, monotonic
 from model_crafter.terms.woe import (
     BinnedTerm,
-    BinningResult,
     WoETerm,
     binned,
     fit_binnings,
-    manual,
-    monotonic,
     woe,
 )
 
@@ -446,7 +444,7 @@ def test_predict_routes_nan_to_missing_bin():
 
 def test_predict_assigns_zero_woe_to_unseen_categories():
     """Categorical: unseen levels at predict time get WoE = 0."""
-    from model_crafter.terms.woe import categorical
+    from model_crafter.terms.binning import categorical
 
     df = pd.DataFrame(
         {

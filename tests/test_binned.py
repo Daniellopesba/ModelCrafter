@@ -19,14 +19,8 @@ import pytest
 
 import model_crafter as mc
 from model_crafter.assumptions.logistic import NoPerfectSeparation
-from model_crafter.terms.woe import (
-    BinnedTerm,
-    binned,
-    fit_binnings,
-    manual,
-    monotonic,
-    woe,
-)
+from model_crafter.terms.binning import manual, monotonic
+from model_crafter.terms.woe import BinnedTerm, binned, fit_binnings, woe
 
 # ---------------------------------------------------------------------------
 # Fixtures

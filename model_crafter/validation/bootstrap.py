@@ -71,9 +71,6 @@ from model_crafter.assumptions import AssumptionError
 from model_crafter.solution import BootstrappedSolution, Solution
 from model_crafter.solve import solve
 
-__all__ = ["bootstrap"]
-
-
 # Failure-rate threshold above which the bootstrap stops and raises. The
 # 5% number is the documented contract in AGENTS.md P3.C.
 _MAX_FAILURE_FRACTION = 0.05
@@ -261,9 +258,7 @@ def bootstrap(
     )
 
 
-# ---------------------------------------------------------------------------
 # Resample generators
-# ---------------------------------------------------------------------------
 
 
 def _pairs_resamples(
@@ -375,9 +370,7 @@ def _block_resamples(
         yield data.iloc[sampled].reset_index(drop=True)
 
 
-# ---------------------------------------------------------------------------
 # Selection frequency
-# ---------------------------------------------------------------------------
 
 
 def _compute_selection_frequency(

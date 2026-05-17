@@ -72,8 +72,6 @@ from model_crafter.solve._registry import (
     register,
 )
 
-__all__ = ["solve_ridge_closed_form"]
-
 
 def _split_intercept(
     X: np.ndarray, columns: tuple[str, ...]

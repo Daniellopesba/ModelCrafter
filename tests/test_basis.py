@@ -34,7 +34,8 @@ from model_crafter.assumptions import (
     Severity,
     SupportContainsPredictData,
 )
-from model_crafter.terms.basis import bs, hinge, ns, poly, smooth, step
+from model_crafter.terms.nonlinear import hinge, poly, step
+from model_crafter.terms.spline import bs, ns, smooth
 
 # ---------------------------------------------------------------------------
 # Helpers

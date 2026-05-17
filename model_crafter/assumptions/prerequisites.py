@@ -115,4 +115,3 @@ def _identify_dependent_columns(X: np.ndarray, columns: tuple[str, ...]) -> list
             offenders.append(columns[j])
     return offenders
 
-

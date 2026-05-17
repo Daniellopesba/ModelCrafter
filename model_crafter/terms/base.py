@@ -32,15 +32,6 @@ from typing import Protocol, runtime_checkable
 import numpy as np
 import pandas as pd
 
-__all__ = [
-    "ExpandedTerm",
-    "RawTerm",
-    "Term",
-    "TermSum",
-    "_normalize_features",
-    "_promote",
-]
-
 
 @dataclass(frozen=True, slots=True)
 class ExpandedTerm:
@@ -181,9 +172,7 @@ class TermSum:
         return iter(self.terms)
 
 
-# ---------------------------------------------------------------------------
 # Promotion and addition helpers
-# ---------------------------------------------------------------------------
 
 
 def _promote(x: object) -> Term:

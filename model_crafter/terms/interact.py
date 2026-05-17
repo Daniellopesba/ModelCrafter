@@ -108,13 +108,6 @@ from model_crafter.terms.base import (
     _promote,
 )
 
-__all__ = [
-    "InteractionTerm",
-    "cross",
-    "interact",
-]
-
-
 _Kind = Literal["interact", "cross"]
 
 
@@ -152,9 +145,7 @@ class InteractionTerm:
                     f"(type {type(op).__name__})"
                 )
 
-    # ------------------------------------------------------------------
     # Term protocol
-    # ------------------------------------------------------------------
 
     @property
     def name(self) -> str:
@@ -212,9 +203,7 @@ class InteractionTerm:
         return _add_terms(other, self)
 
 
-# ---------------------------------------------------------------------------
 # Factories
-# ---------------------------------------------------------------------------
 
 
 def interact(*cols: str | Term) -> InteractionTerm:
@@ -280,9 +269,7 @@ def cross(*cols: str | Term) -> InteractionTerm:
     return _build("cross", cols)
 
 
-# ---------------------------------------------------------------------------
 # Internal helpers
-# ---------------------------------------------------------------------------
 
 
 def _build(kind: _Kind, raw_operands: tuple[str | Term, ...]) -> InteractionTerm:

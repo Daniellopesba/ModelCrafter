@@ -16,13 +16,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Protocol, runtime_checkable
 
-__all__ = [
-    "Assumption",
-    "AssumptionError",
-    "CheckResult",
-    "Severity",
-]
-
 
 class Severity(Enum):
     """Three-tier severity for assumption checks (DESIGN.md §4.1)."""

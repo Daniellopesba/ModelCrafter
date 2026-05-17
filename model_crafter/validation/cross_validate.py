@@ -44,12 +44,7 @@ from model_crafter.assumptions import (
 from model_crafter.solution import Solution
 from model_crafter.solve import solve
 
-__all__ = ["CVResult", "cross_validate"]
-
-
-# ---------------------------------------------------------------------------
 # Result dataclass
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,9 +118,7 @@ class CVResult:
         )
 
 
-# ---------------------------------------------------------------------------
 # Public runner
-# ---------------------------------------------------------------------------
 
 
 _ZERO_TD: pd.Timedelta = pd.Timedelta(0)  # type: ignore[assignment]
@@ -274,9 +267,7 @@ def cross_validate(
     )
 
 
-# ---------------------------------------------------------------------------
 # Internal helpers
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)

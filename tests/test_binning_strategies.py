@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from model_crafter.terms.woe import (
+from model_crafter.terms.binning import (
     MISSING_BIN_LABEL,
     RARE_CATEGORY_LABEL,
     BinningResult,

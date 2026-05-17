@@ -115,17 +115,7 @@ from model_crafter.solve._registry import (
     register,
 )
 
-__all__ = [
-    "CoordinateDescentResult",
-    "coordinate_descent_path",
-    "solve_enet_cd",
-    "solve_lasso_cd",
-]
-
-
-# ---------------------------------------------------------------------------
 # Inner numerical kernel
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -368,12 +358,10 @@ def _cd_loop(
     return max_iter, converged, last_max_change
 
 
-# ---------------------------------------------------------------------------
 # Penalty-parameter extraction (works with P2.A's L1Penalty / L2Penalty /
 # PenaltySum or any duck-typed equivalent — penalty types are not yet in
 # model_crafter.penalty at the time this module is written; integration
 # wires them up).
-# ---------------------------------------------------------------------------
 
 
 def _is_l1_like(p: Any) -> bool:
@@ -435,9 +423,7 @@ def _split_enet_parts(penalty: Any) -> tuple[float, float]:
     return lam_l1, lam_l2
 
 
-# ---------------------------------------------------------------------------
 # Solver entry points (registered with the dispatch)
-# ---------------------------------------------------------------------------
 
 
 def _separate_intercept_column(
@@ -569,13 +555,11 @@ def solve_enet_cd(inputs: SolverInputs) -> SolverOutputs:
     return _run_single_lambda(inputs, lam_l1=lam_l1, lam_l2=lam_l2)
 
 
-# ---------------------------------------------------------------------------
 # Self-registration (best-effort: works when P2.A's L1Penalty / PenaltySum
 # are present in model_crafter.penalty; falls back to a deferred-registration
 # pattern when they aren't yet, so this module remains importable on the
 # pre-P2.A branch and an explicit ``register_solvers()`` call from the
 # integration agent wires it up).
-# ---------------------------------------------------------------------------
 
 
 _REGISTERED = False

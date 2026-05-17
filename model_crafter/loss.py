@@ -30,8 +30,6 @@ from typing import Any, Protocol, runtime_checkable
 import numpy as np
 from scipy.special import expit
 
-__all__ = ["LogisticLoss", "Loss", "logistic", "squared_error"]
-
 
 @runtime_checkable
 class Loss(Protocol):
@@ -188,9 +186,7 @@ class _SquaredErrorLoss:
 squared_error: Loss = _SquaredErrorLoss()
 
 
-# ---------------------------------------------------------------------------
 # Logistic loss (Task P3.A)
-# ---------------------------------------------------------------------------
 
 
 def _logaddexp_stable(eta: np.ndarray) -> np.ndarray:
@@ -286,9 +282,7 @@ class LogisticLoss:
             LinkAdequacy(),
         )
 
-    # ------------------------------------------------------------------
     # Link (Phase 3 wires this into mc.predict at P3.INTEG)
-    # ------------------------------------------------------------------
     def link(self, eta: np.ndarray) -> np.ndarray:
         r"""Inverse-link from linear predictor to probability.
 
@@ -303,9 +297,7 @@ class LogisticLoss:
         """
         return np.asarray(expit(np.asarray(eta, dtype=float)), dtype=float)
 
-    # ------------------------------------------------------------------
     # Loss / gradient / Hessian (the Loss protocol)
-    # ------------------------------------------------------------------
     def value(
         self,
         y: np.ndarray,

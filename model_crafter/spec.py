@@ -16,13 +16,10 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any
 
 from model_crafter.loss import Loss
 from model_crafter.penalty import NoPenalty, Penalty
 from model_crafter.terms.base import Term, _normalize_features
-
-__all__ = ["LinearSpec", "SegmentedSpec", "linear", "segmented"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,14 +39,12 @@ class LinearSpec:
     intercept: bool = True
 
     def __post_init__(self) -> None:
-        # Target validation
         if not isinstance(self.target, str):
             raise TypeError(
                 f"target must be a column name (str); got {type(self.target).__name__}"
             )
         if not self.target:
             raise ValueError("target must be a non-empty column name")
-        # Features validation: must already be a tuple of Terms.
         if not isinstance(self.features, tuple) or not all(
             isinstance(t, Term) for t in self.features
         ):
@@ -58,7 +53,7 @@ class LinearSpec:
             )
         if not self.features:
             raise ValueError("features must be non-empty")
-        # Loss / penalty protocol checks: structural, since they are Protocols.
+        # Loss / Penalty are Protocols, so isinstance is a structural check.
         if not isinstance(self.loss, Loss):
             raise TypeError(
                 f"loss must satisfy the Loss protocol; got {type(self.loss).__name__}"
@@ -112,15 +107,6 @@ def linear(
         penalty=penalty,
         intercept=intercept,
     )
-
-
-# These are referenced by `Any` import keep-alive in some toolchains; silence unused.
-_ = Any
-
-
-# ---------------------------------------------------------------------------
-# SegmentedSpec (Phase 6, DESIGN.md §3.4)
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)

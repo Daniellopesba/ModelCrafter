@@ -41,8 +41,6 @@ import pandas as pd
 from model_crafter.solution import SegmentedSolution, Solution
 from model_crafter.spec import SegmentedSpec
 
-__all__ = ["predict_segmented", "solve_segmented"]
-
 
 def _stringify_key(key: Any) -> str:
     """Coerce a groupby key to a string (mirrors performance.by_segment)."""

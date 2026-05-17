@@ -34,23 +34,7 @@ from model_crafter.metrics._common import (
     resolve_scores_and_target,
 )
 
-__all__ = [
-    "BrierResult",
-    "CalibrationCurve",
-    "CalibrationFit",
-    "ECEResult",
-    "LogLossResult",
-    "brier_score",
-    "calibration_curve",
-    "calibration_slope_intercept",
-    "ece",
-    "log_loss",
-]
-
-
-# ---------------------------------------------------------------------------
 # Result dataclasses
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -171,9 +155,7 @@ class CalibrationFit:
         )
 
 
-# ---------------------------------------------------------------------------
 # Brier
-# ---------------------------------------------------------------------------
 
 
 def _brier_from_arrays(
@@ -204,9 +186,7 @@ def brier_score(
     return BrierResult(value=value, n_obs=n_obs)
 
 
-# ---------------------------------------------------------------------------
 # Log loss
-# ---------------------------------------------------------------------------
 
 
 def _log_loss_from_arrays(
@@ -246,9 +226,7 @@ def log_loss(
     return LogLossResult(value=value, eps=eps, n_obs=n_obs)
 
 
-# ---------------------------------------------------------------------------
 # Calibration curve
-# ---------------------------------------------------------------------------
 
 
 def _bin_by_quantile(
@@ -331,9 +309,7 @@ def calibration_curve(
     )
 
 
-# ---------------------------------------------------------------------------
 # Expected Calibration Error
-# ---------------------------------------------------------------------------
 
 
 def _ece_from_arrays(
@@ -367,9 +343,7 @@ def ece(
     return ECEResult(value=value, n_bins=n_bins, n_obs=n_eff)
 
 
-# ---------------------------------------------------------------------------
 # Calibration slope and intercept
-# ---------------------------------------------------------------------------
 
 
 def _calibration_fit_from_arrays(

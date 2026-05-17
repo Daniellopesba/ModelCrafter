@@ -50,7 +50,6 @@ from model_crafter.metrics import (
     CalibrationCurve,
     CalibrationFit,
     CohensDResult,
-    DeLongResult,
     ECEResult,
     GainsCurve,
     GiniResult,
@@ -64,7 +63,6 @@ from model_crafter.metrics import (
     calibration_slope_intercept,
     cohens_d,
     cumulative_gains,
-    delong_test,
     ece,
     gini,
     ks,
@@ -79,16 +77,17 @@ from model_crafter.metrics.calibration import (
     _ece_from_arrays,
     _log_loss_from_arrays,
 )
-from model_crafter.metrics.classification import (
+from model_crafter.metrics.discrimination import (
     _auc_from_arrays,
-    _cohens_d_from_arrays,
-    _delong_components,
     _ks_from_arrays,
 )
+from model_crafter.metrics.effect_size import _cohens_d_from_arrays
 from model_crafter.metrics.rank import (
     _cumulative_gains_from_arrays,
     _lift_table_from_arrays,
 )
+from model_crafter.performance import DeLongResult, delong_test
+from model_crafter.performance._delong import _delong_components
 
 # ---------------------------------------------------------------------------
 # Fixtures

@@ -34,9 +34,6 @@ from model_crafter.spec import LinearSpec, SegmentedSpec
 if TYPE_CHECKING:
     from model_crafter.assumptions import AssumptionReport
 
-__all__ = ["BootstrappedSolution", "SegmentedSolution", "Solution"]
-
-
 @dataclass(frozen=True, slots=True)
 class Solution:
     """Immutable result of solving a :class:`LinearSpec` against data.
@@ -188,9 +185,7 @@ class BootstrappedSolution:
         if not isinstance(self.method, str):
             raise TypeError("method must be a string")
 
-    # ------------------------------------------------------------------
     # CIs
-    # ------------------------------------------------------------------
 
     def coefficient_ci(
         self, level: float = 0.95, method: str = "percentile"
@@ -348,9 +343,7 @@ class BootstrappedSolution:
         )
 
 
-# ---------------------------------------------------------------------------
 # SegmentedSolution (Phase 6, DESIGN.md §3.4)
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -406,9 +399,7 @@ class SegmentedSolution:
         if self.n_obs < 0:
             raise ValueError(f"n_obs must be non-negative; got {self.n_obs}")
 
-    # ------------------------------------------------------------------
     # Mapping ergonomics
-    # ------------------------------------------------------------------
 
     def __getitem__(self, key: str) -> Solution:
         return self.segments[key]

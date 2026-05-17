@@ -35,8 +35,6 @@ import pandas as pd
 
 from model_crafter.assumptions._types import CheckResult, Severity
 
-__all__ = ["NoTemporalLeakage"]
-
 
 @dataclass(frozen=True, slots=True)
 class NoTemporalLeakage:
@@ -163,9 +161,7 @@ class NoTemporalLeakage:
         )
 
 
-# ---------------------------------------------------------------------------
 # Helpers — duck-typed access to the cv/splitter contract.
-# ---------------------------------------------------------------------------
 
 
 _ZERO_TD: pd.Timedelta = pd.Timedelta(0)  # type: ignore[assignment]
