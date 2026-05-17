@@ -260,7 +260,7 @@ def test_low_vif_passes_on_uncorrelated_features():
     rng = np.random.default_rng(7)
     n = 300
     X = rng.standard_normal((n, 3))
-    df = pd.DataFrame(X, columns=["x1", "x2", "x3"])
+    df = pd.DataFrame(X, columns=pd.Index(["x1", "x2", "x3"]))
     df["y"] = X.sum(axis=1) + rng.standard_normal(n)
     a = LowVIF()
     res = a.check(_spec_with(("x1", "x2", "x3"), (a,)), df)

@@ -20,7 +20,7 @@ documented statistic and compare against the threshold.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -185,7 +185,7 @@ def _metric_series(cv: Any) -> pd.Series:
 
 def _real_coefficient_stability(spec: CoefficientStability, cv: Any) -> CheckResult:
     coefs = _coefficient_matrix(cv)
-    means = coefs.mean(axis=0).abs()
+    means = cast(pd.Series, coefs.mean(axis=0)).abs()
     sds = coefs.std(axis=0, ddof=1)
     # Guard against zero means (intercept-free terms with tiny means).
     safe_means = means.where(means > 0, np.nan)

@@ -18,9 +18,7 @@ from model_crafter.spec import linear
 
 
 def _trivial_solution() -> Solution:
-    from model_crafter.assumptions import (  # pyright: ignore[reportMissingImports]
-        AssumptionReport,
-    )
+    from model_crafter.assumptions import AssumptionReport
 
     spec = linear(target="y", features=["x"], loss=squared_error)
     return Solution(
@@ -34,7 +32,7 @@ def _trivial_solution() -> Solution:
         n_obs=10,
         converged=True,
         solver_info=MappingProxyType({"solver": "ols"}),
-        assumptions=AssumptionReport(),
+        assumptions=AssumptionReport(results=()),
     )
 
 
@@ -65,9 +63,7 @@ def test_solution_has_required_fields() -> None:
 
 def test_solution_coefficient_se_can_be_none() -> None:
     """coefficient_se is optional (None for solvers without closed-form SEs)."""
-    from model_crafter.assumptions import (  # pyright: ignore[reportMissingImports]
-        AssumptionReport,
-    )
+    from model_crafter.assumptions import AssumptionReport
 
     spec = linear(target="y", features=["x"], loss=squared_error)
     sol = Solution(
@@ -81,6 +77,6 @@ def test_solution_coefficient_se_can_be_none() -> None:
         n_obs=10,
         converged=True,
         solver_info=MappingProxyType({}),
-        assumptions=AssumptionReport(),
+        assumptions=AssumptionReport(results=()),
     )
     assert sol.coefficient_se is None

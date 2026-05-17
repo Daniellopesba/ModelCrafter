@@ -188,7 +188,7 @@ def test_assumption_report_repr_contains_per_result_status():
 def _full_rank_frame(seed: int = 0) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
     X = rng.standard_normal((50, 3))
-    return pd.DataFrame(X, columns=["x1", "x2", "x3"]).assign(
+    return pd.DataFrame(X, columns=pd.Index(["x1", "x2", "x3"])).assign(
         y=lambda d: d["x1"] + d["x2"] - 0.5 * d["x3"] + rng.standard_normal(50)
     )
 
@@ -196,7 +196,7 @@ def _full_rank_frame(seed: int = 0) -> pd.DataFrame:
 def _rank_deficient_frame(seed: int = 0) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
     X = rng.standard_normal((50, 2))
-    df = pd.DataFrame(X, columns=["x1", "x2"])
+    df = pd.DataFrame(X, columns=pd.Index(["x1", "x2"]))
     df["x3"] = df["x1"] + df["x2"]  # dependent
     df["y"] = df["x1"] - df["x2"] + rng.standard_normal(50)
     return df

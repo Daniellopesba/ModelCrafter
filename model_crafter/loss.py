@@ -106,13 +106,21 @@ class _SquaredErrorLoss:
 
     @property
     def assumptions(self) -> tuple:
-        # Lazy import so this module does not require the assumptions package
-        # to be present at import time (P1.B is a sibling task).
-        from model_crafter.assumptions import (  # pyright: ignore[reportMissingImports]
+        from model_crafter.assumptions import (
             FullRankDesign,
+            Homoscedasticity,
+            Independence,
+            LowVIF,
+            ResidualNormality,
         )
 
-        return (FullRankDesign(),)
+        return (
+            FullRankDesign(),
+            ResidualNormality(),
+            Homoscedasticity(),
+            Independence(),
+            LowVIF(),
+        )
 
     def value(
         self,

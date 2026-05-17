@@ -23,9 +23,7 @@ import pandas as pd
 from model_crafter.spec import LinearSpec
 
 if TYPE_CHECKING:
-    from model_crafter.assumptions import (  # pyright: ignore[reportMissingImports]
-        AssumptionReport,
-    )
+    from model_crafter.assumptions import AssumptionReport
 
 __all__ = ["Solution"]
 

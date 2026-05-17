@@ -33,10 +33,8 @@ import numpy as np
 import pandas as pd
 import pytest
 import statsmodels.api as sm
-from model_crafter.assumptions import (  # pyright: ignore[reportMissingImports]
-    AssumptionError,
-)
 
+from model_crafter.assumptions import AssumptionError
 from model_crafter.loss import squared_error
 from model_crafter.solve import predict, solve
 from model_crafter.spec import linear

@@ -132,10 +132,7 @@ def solve(
         Splitter for the SOFT stability checks (not used in Phase 1; reserved
         for Phase 3+).
     """
-    from model_crafter.assumptions import (  # pyright: ignore[reportMissingImports]
-        AssumptionError,
-        run_assumptions,
-    )
+    from model_crafter.assumptions import AssumptionError, run_assumptions
 
     if not isinstance(spec, LinearSpec):
         raise TypeError(f"spec must be a LinearSpec; got {type(spec).__name__}")
@@ -157,45 +154,28 @@ def solve(
     )
 
     if offending:
-        # Run the assumption framework with the rank result so the message,
-        # severity, and report shape come from P1.B (the opaque interface).
-        try:
-            run_assumptions(
-                spec,
-                data,
-                on_violation=on_violation,
-                suppress=suppress,
-                classical_inference=classical_inference,
-                design=design,
-                offending_columns=offending,
-            )
-        except TypeError:
-            # The real P1.B framework may not accept design= / offending_columns=
-            # kwargs at the call boundary; fall back to building the report
-            # ourselves and raising directly.
-            cols_display = list(offending)
-            terms_display = list(offending_terms)
-            raise AssumptionError(
-                "FullRankDesign violated: design matrix is rank-deficient. "
-                f"Offending columns: {cols_display}. "
-                f"Originating terms: {terms_display}. "
-                "Drop one of the collinear features or add a penalty "
-                "(ESL §3.4.1: ridge / lasso is the principled response)."
-            ) from None
-        else:
-            # If the framework's HARD check fired and returned (e.g. on_violation
-            # != "raise"), we still cannot continue with a singular X. Construct
-            # the error message ourselves so callers using on_violation="warn"
-            # do not get a numerical NaN explosion downstream.
-            cols_display = list(offending)
-            terms_display = list(offending_terms)
-            raise AssumptionError(
-                "FullRankDesign violated: design matrix is rank-deficient. "
-                f"Offending columns: {cols_display}. "
-                f"Originating terms: {terms_display}. "
-                "Drop one of the collinear features or add a penalty "
-                "(ESL §3.4.1: ridge / lasso is the principled response)."
-            )
+        # Let the framework run its FullRankDesign check (which also detects
+        # rank-deficiency) so HARD-severity handling routes through the same
+        # path as every other prerequisite.
+        run_assumptions(
+            spec,
+            data,
+            on_violation=on_violation,
+            suppress=suppress,
+            classical_inference=classical_inference,
+        )
+        # If on_violation is "warn" or "ignore" the framework returned without
+        # raising, but a singular X cannot be solved — raise with a terms-aware
+        # message so callers get a clear, actionable error.
+        cols_display = list(offending)
+        terms_display = list(offending_terms)
+        raise AssumptionError(
+            "FullRankDesign violated: design matrix is rank-deficient. "
+            f"Offending columns: {cols_display}. "
+            f"Originating terms: {terms_display}. "
+            "Drop one of the collinear features or add a penalty "
+            "(ESL §3.4.1: ridge / lasso is the principled response)."
+        )
 
     # ---- Numerical solve ----
     solver_fn = get_solver(spec.loss, spec.penalty)
@@ -210,10 +190,20 @@ def solve(
     out: SolverOutputs = solver_fn(inputs)
 
     # ---- Post-fit assumption pass (HARD + SOFT + optional INFO) ----
+    # The classical INFO checks (Homoscedasticity, Independence, etc.) read
+    # residuals off ``solution.coefficients``, so we hand the framework a
+    # lightweight stand-in carrying the contract attributes (DESIGN.md §4.2).
+    from types import SimpleNamespace
+
+    fitted_stub = SimpleNamespace(
+        coefficients=out.coefficients,
+        coefficient_se=out.coefficient_se,
+        design_columns=tuple(out.coefficients.index),
+    )
     report = run_assumptions(
         spec,
         data,
-        solution=None,  # post-fit checks not in scope for Phase 1
+        solution=fitted_stub,
         on_violation=on_violation,
         suppress=suppress,
         classical_inference=classical_inference,
