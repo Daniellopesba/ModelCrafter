@@ -61,6 +61,7 @@ from model_crafter.assumptions.stability import (
     CoefficientStability,
     ComparableFeatureScales,
     PredictiveStability,
+    SupportContainsPredictData,
 )
 from model_crafter.assumptions.temporal import NoTemporalLeakage
 
@@ -134,6 +135,7 @@ __all__ = [
     "PredictiveStability",
     "ResidualNormality",
     "Severity",
+    "SupportContainsPredictData",
     "check_assumptions",
     "run_assumptions",
 ]
