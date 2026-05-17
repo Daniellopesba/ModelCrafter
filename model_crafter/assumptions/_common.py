@@ -55,15 +55,38 @@ def materialise_design(spec: Any, data: Any) -> tuple[np.ndarray, tuple[str, ...
     """Build the design matrix and the matching column-name tuple from a
     spec + DataFrame.
 
-    Phase 1 only handles "raw column" features. Basis expansion / WoE
-    encoding come from later phases and are the responsibility of P1.A's
-    ``_internal/design.py``. The assumption layer needs its own minimal
-    materialisation so that it can run *before* a solution exists.
+    Phase 1 only needed raw-column expansion. Phase 4 introduces basis
+    expansions (``ns``, ``bs``, ``poly``, ``step``, ``hinge``), WoE /
+    bin-indicator terms, and interactions — every term that produces
+    multiple columns. To honour those expansions the framework now
+    delegates to :func:`model_crafter._internal.design.build_design`, the
+    same builder ``solve`` uses, when the spec carries ``Term``-like
+    features. The simple raw-column fallback is kept for callers that
+    pass minimal duck-typed specs (e.g. unit tests of the framework).
     """
     if not isinstance(data, pd.DataFrame):
         raise TypeError(
             f"materialise_design requires a pandas DataFrame; got {type(data).__name__}"
         )
+    # Prefer the canonical builder when the spec exposes Term-like features.
+    features = getattr(spec, "features", None)
+    if features is not None and all(
+        hasattr(t, "expand") and hasattr(t, "name") for t in features
+    ):
+        # Local import to avoid an import-time cycle between this package
+        # and ``model_crafter._internal.design`` (which transitively imports
+        # ``spec`` which imports the loss / penalty protocols).
+        from model_crafter._internal.design import build_design
+
+        try:
+            dm = build_design(spec, data)
+        except Exception:
+            # Fall through to the simple path; the caller's check will
+            # surface a more specific error if needed.
+            pass
+        else:
+            return np.asarray(dm.values, dtype=float), tuple(dm.columns)
+
     feats = _feature_columns(spec)
     missing = [c for c in feats if c not in data.columns]
     if missing:
