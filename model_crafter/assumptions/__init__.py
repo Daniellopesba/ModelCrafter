@@ -50,6 +50,12 @@ from model_crafter.assumptions.classical import (
     LowVIF,
     ResidualNormality,
 )
+from model_crafter.assumptions.logistic import (
+    BinaryOrProportionTarget,
+    ClassBalance,
+    LinkAdequacy,
+    NoPerfectSeparation,
+)
 from model_crafter.assumptions.prerequisites import FullRankDesign
 from model_crafter.assumptions.stability import (
     CoefficientStability,
@@ -112,13 +118,17 @@ __all__ = [
     "Assumption",
     "AssumptionError",
     "AssumptionReport",
+    "BinaryOrProportionTarget",
     "CheckResult",
+    "ClassBalance",
     "CoefficientStability",
     "ComparableFeatureScales",
     "FullRankDesign",
     "Homoscedasticity",
     "Independence",
+    "LinkAdequacy",
     "LowVIF",
+    "NoPerfectSeparation",
     "PredictiveStability",
     "ResidualNormality",
     "Severity",
