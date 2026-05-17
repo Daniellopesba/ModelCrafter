@@ -10,6 +10,15 @@ answers "is the model good?".
 
 from __future__ import annotations
 
+from model_crafter.performance.by_segment import (
+    SegmentedPerformanceReport,
+    performance_by_segment,
+)
+from model_crafter.performance.compare import Comparison, compare
+from model_crafter.performance.over_time import (
+    TemporalPerformanceReport,
+    performance_over_time,
+)
 from model_crafter.performance.report import (
     CalibrationReport,
     DiscriminationReport,
@@ -21,9 +30,15 @@ from model_crafter.performance.report import (
 
 __all__ = [
     "CalibrationReport",
+    "Comparison",
     "DiscriminationReport",
     "DistributionReport",
     "PerformanceReport",
+    "SegmentedPerformanceReport",
     "StabilityReport",
+    "TemporalPerformanceReport",
+    "compare",
     "performance",
+    "performance_by_segment",
+    "performance_over_time",
 ]
