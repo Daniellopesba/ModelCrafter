@@ -32,8 +32,13 @@ from model_crafter.metrics import (
 # Phase 2: penalties + lambda path
 from model_crafter.penalty import NoPenalty, l1, l2
 
-# Phase 3: performance bundle
-from model_crafter.performance import performance
+# Phase 3 + 5: performance bundle, temporal / segmented / comparison
+from model_crafter.performance import (
+    compare,
+    performance,
+    performance_by_segment,
+    performance_over_time,
+)
 from model_crafter.solve import predict, solve
 from model_crafter.spec import linear
 from model_crafter.terms import (
@@ -109,7 +114,10 @@ __all__ = [
     "ns",
     "one_se_rule",
     "over_time",
+    "compare",
     "performance",
+    "performance_by_segment",
+    "performance_over_time",
     "poly",
     "predict",
     "psi",
