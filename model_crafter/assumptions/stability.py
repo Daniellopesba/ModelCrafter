@@ -139,7 +139,6 @@ class PredictiveStability:
         return _real_predictive_stability(self, cv)
 
 
-# ---------------------------------------------------------------------------
 # CV-backed implementations.
 #
 # These are deliberately small: they expect ``cv`` to expose either a
@@ -147,7 +146,6 @@ class PredictiveStability:
 # DataFrame depending on the check. P3.B will pin the CVResult shape;
 # until then, the implementations read the simplest documented shape so
 # downstream tests can exercise the real path without waiting on P3.B.
-# ---------------------------------------------------------------------------
 
 
 def _coefficient_matrix(cv: Any) -> pd.DataFrame:
@@ -260,9 +258,7 @@ def _real_predictive_stability(spec: PredictiveStability, cv: Any) -> CheckResul
     )
 
 
-# ---------------------------------------------------------------------------
 # ComparableFeatureScales (declared by L1Penalty and L2Penalty)
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -375,9 +371,7 @@ class ComparableFeatureScales:
         )
 
 
-# ---------------------------------------------------------------------------
 # SupportContainsPredictData (declared by Phase-4 basis terms)
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)

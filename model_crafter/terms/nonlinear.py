@@ -43,9 +43,7 @@ from model_crafter.terms.base import TermSum, _add_terms
 __all__ = ["hinge", "poly", "step"]
 
 
-# ---------------------------------------------------------------------------
 # Orthogonal polynomial.
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -128,9 +126,7 @@ def poly(col: str, degree: int) -> _PolyTerm:
     return _PolyTerm(col=col, degree=int(degree))
 
 
-# ---------------------------------------------------------------------------
 # Step.
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -208,9 +204,7 @@ def step(col: str, breakpoints: Sequence[float]) -> _StepTerm:
     return _StepTerm(col=col, breakpoints=tuple(float(b) for b in breakpoints))
 
 
-# ---------------------------------------------------------------------------
 # Hinge (MARS).
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)

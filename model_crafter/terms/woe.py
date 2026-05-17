@@ -102,9 +102,7 @@ __all__ = [
 MissingPolicy = Literal["nearest", "zero", "missing_bin"]
 
 
-# ---------------------------------------------------------------------------
 # WoETerm and BinnedTerm.
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -284,9 +282,7 @@ class BinnedTerm:
         return replace(self, fitted=result)
 
 
-# ---------------------------------------------------------------------------
 # Public constructors.
-# ---------------------------------------------------------------------------
 
 
 def woe(col: str, bins: Binning) -> WoETerm:
@@ -309,9 +305,7 @@ def binned(col: str, bins: Binning) -> BinnedTerm:
     return BinnedTerm(column=col, binning=bins)
 
 
-# ---------------------------------------------------------------------------
 # Spec-level fitting helper.
-# ---------------------------------------------------------------------------
 
 
 def fit_binnings(
@@ -353,9 +347,7 @@ def fit_binnings(
     return replace(spec, features=tuple(new_features))
 
 
-# ---------------------------------------------------------------------------
 # Predict-time assignment helpers.
-# ---------------------------------------------------------------------------
 
 
 def _resolve_fit(

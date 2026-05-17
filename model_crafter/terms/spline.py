@@ -58,9 +58,7 @@ from model_crafter.terms.base import TermSum, _add_terms
 __all__ = ["bs", "ns", "smooth"]
 
 
-# ---------------------------------------------------------------------------
 # Knot construction (shared by bs and ns).
-# ---------------------------------------------------------------------------
 
 
 def _interior_quantile_knots(x: np.ndarray, n_interior: int) -> np.ndarray:
@@ -98,9 +96,7 @@ def _bspline_basis_matrix(
     return out
 
 
-# ---------------------------------------------------------------------------
 # B-spline (``bs``).
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -201,9 +197,7 @@ def bs(
     )
 
 
-# ---------------------------------------------------------------------------
 # Natural cubic spline (``ns``).
-# ---------------------------------------------------------------------------
 
 
 def _ns_projection(

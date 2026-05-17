@@ -141,9 +141,7 @@ class BinningResult:
         )
 
 
-# ---------------------------------------------------------------------------
 # Binning strategies (values, not classes — user calls mc.monotonic() etc.)
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -326,9 +324,7 @@ class ManualBinning:
 Binning = MonotonicBinning | TreeBinning | CategoricalBinning | ManualBinning
 
 
-# ---------------------------------------------------------------------------
 # Public binning-strategy constructors (the value-returning factories).
-# ---------------------------------------------------------------------------
 
 
 def monotonic(min_bin_size: float = 0.05, max_bins: int = 20) -> MonotonicBinning:
@@ -363,9 +359,7 @@ def manual(edges: Sequence[float]) -> ManualBinning:
     return ManualBinning(edges=tuple(float(e) for e in edges))
 
 
-# ---------------------------------------------------------------------------
 # Strategy-agnostic helpers.
-# ---------------------------------------------------------------------------
 
 
 def _check_y(y: np.ndarray) -> None:
@@ -474,9 +468,7 @@ def _build_result_numeric(
     )
 
 
-# ---------------------------------------------------------------------------
 # Monotonic binning.
-# ---------------------------------------------------------------------------
 
 
 def _fit_monotonic(
@@ -623,9 +615,7 @@ def _enforce_monotone_direction(
         interior = np.delete(interior, worst)
 
 
-# ---------------------------------------------------------------------------
 # Tree binning.
-# ---------------------------------------------------------------------------
 
 
 def _gini(p_event: float) -> float:
@@ -759,9 +749,7 @@ def _fit_tree(
     )
 
 
-# ---------------------------------------------------------------------------
 # Categorical binning.
-# ---------------------------------------------------------------------------
 
 
 def _fit_categorical(
@@ -857,9 +845,7 @@ def _fit_categorical(
     )
 
 
-# ---------------------------------------------------------------------------
 # Manual binning.
-# ---------------------------------------------------------------------------
 
 
 def _fit_manual(

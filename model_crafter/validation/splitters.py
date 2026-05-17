@@ -56,9 +56,7 @@ __all__ = [
 ]
 
 
-# ---------------------------------------------------------------------------
 # Protocol
-# ---------------------------------------------------------------------------
 
 
 @runtime_checkable
@@ -88,9 +86,7 @@ class Splitter(Protocol):
     def split(self, df: pd.DataFrame) -> Iterator[tuple[pd.DataFrame, pd.DataFrame]]: ...
 
 
-# ---------------------------------------------------------------------------
 # Helpers — timedelta parsing + validation
-# ---------------------------------------------------------------------------
 
 
 def _to_timedelta(value: str | pd.Timedelta | None, *, name: str) -> pd.Timedelta:
@@ -159,9 +155,7 @@ def _index_max(ts: pd.DatetimeIndex) -> pd.Timestamp:
     return out
 
 
-# ---------------------------------------------------------------------------
 # time_split — single chronological split into k slices
-# ---------------------------------------------------------------------------
 
 
 def time_split(
@@ -228,9 +222,7 @@ def time_split(
     return tuple(pieces)
 
 
-# ---------------------------------------------------------------------------
 # expanding_window
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -324,9 +316,7 @@ def expanding_window(
     )
 
 
-# ---------------------------------------------------------------------------
 # rolling_window
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -409,9 +399,7 @@ def rolling_window(
     )
 
 
-# ---------------------------------------------------------------------------
 # purged_kfold
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -471,9 +459,7 @@ def purged_kfold(
     return _PurgedKFold(time_col=time_col, n_folds=int(n_folds), gap=gap_td)
 
 
-# ---------------------------------------------------------------------------
 # Common helper for downstream consumers (cross_validate / NoTemporalLeakage)
-# ---------------------------------------------------------------------------
 
 
 def splitter_time_col(splitter: Any) -> str | None:

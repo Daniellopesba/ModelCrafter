@@ -181,9 +181,7 @@ class TermSum:
         return iter(self.terms)
 
 
-# ---------------------------------------------------------------------------
 # Promotion and addition helpers
-# ---------------------------------------------------------------------------
 
 
 def _promote(x: object) -> Term:

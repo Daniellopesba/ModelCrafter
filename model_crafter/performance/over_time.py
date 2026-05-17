@@ -48,9 +48,7 @@ if TYPE_CHECKING:  # pragma: no cover — type-checker only
 __all__ = ["TemporalPerformanceReport", "performance_over_time"]
 
 
-# ---------------------------------------------------------------------------
 # Dataclass
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -182,9 +180,7 @@ class TemporalPerformanceReport:
         return "\n".join([header, "", body, "", *bullets]).rstrip()
 
 
-# ---------------------------------------------------------------------------
 # Orchestration
-# ---------------------------------------------------------------------------
 
 
 def _iter_valid_windows(

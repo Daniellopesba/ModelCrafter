@@ -71,9 +71,7 @@ from model_crafter.solve._registry import (
 __all__ = ["solve_logistic_irls", "solve_logistic_ridge_irls"]
 
 
-# ---------------------------------------------------------------------------
 # Weighted least squares (one IRLS step).
-# ---------------------------------------------------------------------------
 
 
 def _solve_weighted_least_squares(
@@ -186,9 +184,7 @@ def _compute_irls_se(
         return None
 
 
-# ---------------------------------------------------------------------------
 # Solver entries.
-# ---------------------------------------------------------------------------
 
 
 def solve_logistic_irls(inputs: SolverInputs) -> SolverOutputs:

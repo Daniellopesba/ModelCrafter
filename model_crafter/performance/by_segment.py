@@ -48,9 +48,7 @@ __all__ = [
 ]
 
 
-# ---------------------------------------------------------------------------
 # The bundled value
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,9 +70,7 @@ class SegmentedPerformanceReport:
     segments: dict[str, PerformanceReport]
     aggregate: PerformanceReport
 
-    # ------------------------------------------------------------------
     # Repr — aggregate first, then a compact per-segment summary
-    # ------------------------------------------------------------------
     def __repr__(self) -> str:
         lines: list[str] = ["SegmentedPerformanceReport"]
         agg = self.aggregate
@@ -142,9 +138,7 @@ class SegmentedPerformanceReport:
         )
 
 
-# ---------------------------------------------------------------------------
 # Orchestration
-# ---------------------------------------------------------------------------
 
 
 def performance_by_segment(
@@ -219,9 +213,7 @@ def performance_by_segment(
     )
 
 
-# ---------------------------------------------------------------------------
 # Helpers
-# ---------------------------------------------------------------------------
 
 
 def _stringify_key(key: Any) -> str:

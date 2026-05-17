@@ -163,9 +163,7 @@ class NoTemporalLeakage:
         )
 
 
-# ---------------------------------------------------------------------------
 # Helpers — duck-typed access to the cv/splitter contract.
-# ---------------------------------------------------------------------------
 
 
 _ZERO_TD: pd.Timedelta = pd.Timedelta(0)  # type: ignore[assignment]

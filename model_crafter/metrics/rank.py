@@ -39,9 +39,7 @@ from model_crafter.metrics._common import (
 __all__ = ["GainsCurve", "LiftTable", "cumulative_gains", "lift_table"]
 
 
-# ---------------------------------------------------------------------------
 # Result dataclasses
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,9 +108,7 @@ class GainsCurve:
         return "\n".join(lines)
 
 
-# ---------------------------------------------------------------------------
 # Lift table
-# ---------------------------------------------------------------------------
 
 
 def _lift_table_from_arrays(
@@ -211,9 +207,7 @@ def lift_table(
     return LiftTable(table=table, n_deciles=n_deciles)
 
 
-# ---------------------------------------------------------------------------
 # Cumulative gains
-# ---------------------------------------------------------------------------
 
 
 def _cumulative_gains_from_arrays(
