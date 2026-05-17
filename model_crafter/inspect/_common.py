@@ -13,15 +13,6 @@ from typing import Any
 
 import pandas as pd
 
-__all__ = [
-    "_bootstrap_pointer",
-    "_coef_se_from_solution",
-    "_solution_is_logistic",
-    "_solution_is_ols",
-    "_solution_is_ridge",
-    "_solution_supports_closed_form_hat",
-]
-
 
 def _solution_is_ols(sol: Any) -> bool:
     """True iff the spec is squared-error + NoPenalty (closed-form OLS)."""

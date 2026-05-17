@@ -35,8 +35,6 @@ import pandas as pd
 
 from model_crafter.assumptions._types import CheckResult, Severity
 
-__all__ = ["NoTemporalLeakage"]
-
 
 @dataclass(frozen=True, slots=True)
 class NoTemporalLeakage:

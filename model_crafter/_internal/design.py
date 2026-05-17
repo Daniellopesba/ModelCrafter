@@ -24,9 +24,6 @@ from model_crafter.spec import LinearSpec
 
 INTERCEPT_NAME = "(Intercept)"
 
-__all__ = ["INTERCEPT_NAME", "DesignMatrix", "build_design"]
-
-
 @dataclass(frozen=True, slots=True)
 class DesignMatrix:
     """A numerical design matrix bundled with its column metadata.

@@ -30,8 +30,6 @@ from typing import Any, Protocol, runtime_checkable
 import numpy as np
 from scipy.special import expit
 
-__all__ = ["LogisticLoss", "Loss", "logistic", "squared_error"]
-
 
 @runtime_checkable
 class Loss(Protocol):

@@ -55,9 +55,6 @@ from model_crafter.terms._basis_common import (
 )
 from model_crafter.terms.base import TermSum, _add_terms
 
-__all__ = ["bs", "ns", "smooth"]
-
-
 # Knot construction (shared by bs and ns).
 
 

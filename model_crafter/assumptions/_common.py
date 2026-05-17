@@ -17,12 +17,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-__all__ = [
-    "design_column_names",
-    "get_residuals",
-    "materialise_design",
-]
-
 
 def _feature_columns(spec: Any) -> tuple[str, ...]:
     """Return the data column names referenced by ``spec.features``.

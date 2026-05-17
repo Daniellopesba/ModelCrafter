@@ -68,9 +68,6 @@ from model_crafter.solve._registry import (
     register,
 )
 
-__all__ = ["solve_logistic_irls", "solve_logistic_ridge_irls"]
-
-
 # Weighted least squares (one IRLS step).
 
 

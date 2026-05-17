@@ -47,17 +47,6 @@ from typing import Any, Protocol, runtime_checkable
 
 import numpy as np
 
-__all__ = [
-    "L1Penalty",
-    "L2Penalty",
-    "NoPenalty",
-    "Penalty",
-    "PenaltySum",
-    "l1",
-    "l2",
-]
-
-
 # Helpers / shared error path
 
 

@@ -32,8 +32,6 @@ from model_crafter.solve._registry import (
     register,
 )
 
-__all__ = ["solve_ols"]
-
 
 def solve_ols(inputs: SolverInputs) -> SolverOutputs:
     """Closed-form OLS / WLS solver for the squared-error + NoPenalty case."""

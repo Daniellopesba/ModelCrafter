@@ -29,17 +29,16 @@ from model_crafter.terms.base import (
     _normalize_features,
     _promote,
 )
-from model_crafter.terms.interact import cross, interact
-from model_crafter.terms.nonlinear import hinge, poly, step
-from model_crafter.terms.spline import bs, ns, smooth
-from model_crafter.terms.woe import (
-    binned,
+from model_crafter.terms.binning import (
     categorical,
     manual,
     monotonic,
     tree_bins,
-    woe,
 )
+from model_crafter.terms.interact import cross, interact
+from model_crafter.terms.nonlinear import hinge, poly, step
+from model_crafter.terms.spline import bs, ns, smooth
+from model_crafter.terms.woe import binned, woe
 
 __all__ = [
     "ExpandedTerm",

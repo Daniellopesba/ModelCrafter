@@ -35,9 +35,6 @@ import pandas as pd
 
 from model_crafter.metrics._common import coerce_weights
 
-__all__ = ["PSIResult", "psi"]
-
-
 _PSI_EPS = 1e-6
 """Floor for bin mass before entering the log (prevents log(0))."""
 

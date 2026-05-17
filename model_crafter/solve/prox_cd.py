@@ -60,8 +60,6 @@ from model_crafter.solve._registry import (
     register,
 )
 
-__all__ = ["solve_logistic_prox_cd"]
-
 
 def _split_l1_l2(penalty: object) -> tuple[float, float]:
     """Read ``(lam_l1, lam_l2)`` from an L1 / L2 / L1+L2 ``PenaltySum``."""

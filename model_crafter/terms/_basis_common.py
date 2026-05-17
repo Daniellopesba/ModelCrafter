@@ -26,8 +26,6 @@ import pandas as pd
 
 from model_crafter.terms.base import ExpandedTerm
 
-__all__ = ["_BasisExpandedTerm", "_freeze_state", "_x_series"]
-
 
 @dataclass(frozen=True, slots=True)
 class _BasisExpandedTerm(ExpandedTerm):

@@ -115,14 +115,6 @@ from model_crafter.solve._registry import (
     register,
 )
 
-__all__ = [
-    "CoordinateDescentResult",
-    "coordinate_descent_path",
-    "solve_enet_cd",
-    "solve_lasso_cd",
-]
-
-
 # Inner numerical kernel
 
 

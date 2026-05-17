@@ -23,8 +23,6 @@ from typing import Any
 
 import pandas as pd
 
-__all__ = ["BinningTable", "binning_table"]
-
 
 @dataclass(frozen=True, slots=True)
 class BinningTable:

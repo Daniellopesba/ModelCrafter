@@ -34,8 +34,6 @@ from model_crafter.inspect._common import (
     _solution_is_ols,
 )
 
-__all__ = ["coefficients"]
-
 
 def coefficients(sol: Any) -> pd.DataFrame:
     """Coefficient table indexed by design column.

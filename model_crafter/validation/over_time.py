@@ -19,8 +19,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-__all__ = ["over_time"]
-
 
 def over_time(
     metric: Callable,

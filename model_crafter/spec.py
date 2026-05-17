@@ -21,8 +21,6 @@ from model_crafter.loss import Loss
 from model_crafter.penalty import NoPenalty, Penalty
 from model_crafter.terms.base import Term, _normalize_features
 
-__all__ = ["LinearSpec", "SegmentedSpec", "linear", "segmented"]
-
 
 @dataclass(frozen=True, slots=True)
 class LinearSpec:
@@ -109,8 +107,6 @@ def linear(
         penalty=penalty,
         intercept=intercept,
     )
-
-
 
 
 @dataclass(frozen=True, slots=True)

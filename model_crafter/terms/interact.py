@@ -108,13 +108,6 @@ from model_crafter.terms.base import (
     _promote,
 )
 
-__all__ = [
-    "InteractionTerm",
-    "cross",
-    "interact",
-]
-
-
 _Kind = Literal["interact", "cross"]
 
 

@@ -40,9 +40,6 @@ from model_crafter.terms._basis_common import (
 )
 from model_crafter.terms.base import TermSum, _add_terms
 
-__all__ = ["hinge", "poly", "step"]
-
-
 # Orthogonal polynomial.
 
 

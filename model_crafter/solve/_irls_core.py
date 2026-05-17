@@ -27,18 +27,6 @@ from scipy.special import expit
 
 from model_crafter._internal.design import INTERCEPT_NAME
 
-__all__ = [
-    "_MAX_ITER_DEFAULT",
-    "_P_CLIP",
-    "_TOL_DEFAULT",
-    "_build_working_response",
-    "_initialise_eta",
-    "_intercept_index",
-    "_normalize_weights",
-    "_relative_beta_change",
-]
-
-
 _TOL_DEFAULT = 1e-8
 _MAX_ITER_DEFAULT = 100
 _P_CLIP = 1e-12  # keep p strictly inside (0, 1) so z stays finite.

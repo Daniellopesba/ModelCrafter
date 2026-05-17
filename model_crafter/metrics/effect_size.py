@@ -30,8 +30,6 @@ from model_crafter.metrics._common import (
     weighted_mean,
 )
 
-__all__ = ["CohensDResult", "cohens_d"]
-
 
 @dataclass(frozen=True, slots=True)
 class CohensDResult:

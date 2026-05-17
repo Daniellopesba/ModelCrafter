@@ -37,8 +37,6 @@ import pandas as pd
 from model_crafter._internal.design import build_design
 from model_crafter.spec import LinearSpec
 
-__all__ = ["compute_lambda_max", "lambda_path", "log_grid"]
-
 
 def log_grid(low: float, high: float, n: int) -> np.ndarray:
     r"""Return ``n`` log-spaced points from ``high`` *down to* ``low`` inclusive.

@@ -45,9 +45,6 @@ from model_crafter.performance.report import PerformanceReport, performance
 if TYPE_CHECKING:  # pragma: no cover — type-checker only
     from matplotlib.figure import Figure
 
-__all__ = ["TemporalPerformanceReport", "performance_over_time"]
-
-
 # Dataclass
 
 

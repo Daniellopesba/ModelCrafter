@@ -34,13 +34,6 @@ import numpy as np
 
 from model_crafter.assumptions._types import CheckResult, Severity
 
-__all__ = [
-    "AtLeastOneEventPerBin",
-    "MinimumBinSize",
-    "MonotonicEventRate",
-    "WoEMonotonicityPreserved",
-]
-
 
 def _binning_terms(spec: Any) -> list[Any]:
     """Return the list of WoE/Binned terms in ``spec.features`` (lazy import)."""
@@ -229,7 +222,7 @@ class MonotonicEventRate:
         cv: Any | None = None,
     ) -> CheckResult:
         # Lazy import to avoid circular dependency.
-        from model_crafter.terms.woe import MonotonicBinning
+        from model_crafter.terms.binning import MonotonicBinning
 
         terms = _binning_terms(spec)
         applicable = [
