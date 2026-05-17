@@ -1,17 +1,21 @@
-"""Metric primitives for ``model_crafter`` (DESIGN.md §3.3).
+"""Metric primitives (DESIGN.md §3.3).
 
 Every primitive accepts ``(sol, data, weights=...)`` (with the exception
-of :func:`psi`, which takes two raw distributions instead of a fitted
-solution — DESIGN.md §3.3) and returns a frozen-dataclass result type
-with a rich ``__repr__`` and ``__float__`` for use in numeric contexts.
+of :func:`psi`, which takes two distributions directly) and returns a
+frozen-dataclass result with a rich ``__repr__`` and ``__float__``.
 
 Sub-modules
 
-* :mod:`.classification` — AUC, Gini, KS, Cohen's d, DeLong test
+* :mod:`.discrimination` — AUC, Gini, KS
+* :mod:`.effect_size` — Cohen's d
 * :mod:`.calibration` — Brier, ECE, calibration curve, log-loss,
   slope/intercept
 * :mod:`.stability` — PSI
 * :mod:`.rank` — lift table, cumulative gains
+
+The DeLong (1988) paired AUC test lives in
+:mod:`model_crafter.performance.compare` next to ``mc.compare`` — see
+that module for why.
 """
 
 from __future__ import annotations
@@ -28,18 +32,15 @@ from model_crafter.metrics.calibration import (
     ece,
     log_loss,
 )
-from model_crafter.metrics.classification import (
+from model_crafter.metrics.discrimination import (
     AUCResult,
-    CohensDResult,
-    DeLongResult,
     GiniResult,
     KSResult,
     auc,
-    cohens_d,
-    delong_test,
     gini,
     ks,
 )
+from model_crafter.metrics.effect_size import CohensDResult, cohens_d
 from model_crafter.metrics.rank import (
     GainsCurve,
     LiftTable,
@@ -54,7 +55,6 @@ __all__ = [
     "CalibrationCurve",
     "CalibrationFit",
     "CohensDResult",
-    "DeLongResult",
     "ECEResult",
     "GainsCurve",
     "GiniResult",
@@ -68,7 +68,6 @@ __all__ = [
     "calibration_slope_intercept",
     "cohens_d",
     "cumulative_gains",
-    "delong_test",
     "ece",
     "gini",
     "ks",

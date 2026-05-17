@@ -29,7 +29,6 @@ from model_crafter.metrics import (
     calibration_slope_intercept,
     cohens_d,
     cumulative_gains,
-    delong_test,
     ece,
     gini,
     ks,
@@ -44,6 +43,7 @@ from model_crafter.penalty import NoPenalty, l1, l2
 # Phase 3 + 5: performance bundle, temporal / segmented / comparison
 from model_crafter.performance import (
     compare,
+    delong_test,
     performance,
     performance_by_segment,
     performance_over_time,

@@ -27,9 +27,8 @@ import pandas as pd
 import pytest
 
 import model_crafter as mc
-from model_crafter.metrics.classification import delong_test
 from model_crafter.performance import PerformanceReport, performance
-from model_crafter.performance.compare import Comparison, compare
+from model_crafter.performance.compare import Comparison, compare, delong_test
 
 # ---------------------------------------------------------------------------
 # Fixtures

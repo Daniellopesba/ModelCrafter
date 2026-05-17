@@ -13,7 +13,7 @@ Implementation notes
   sub-reports contain values matching individual primitive calls.)
 * The AUC CI in the report header is computed with DeLong's one-sample
   variance — the same structural-component variance as
-  :func:`~model_crafter.metrics.classification.delong_test` reformulated
+  :func:`~model_crafter.performance.compare.delong_test` reformulated
   for a single AUC. We compute it here rather than as a public primitive
   to keep the metrics surface minimal.
 * PSI is computed against ``reference`` if and only if a reference is
@@ -51,15 +51,16 @@ from model_crafter.metrics.calibration import (
     _ece_from_arrays,
     _log_loss_from_arrays,
 )
-from model_crafter.metrics.classification import (
+from model_crafter.metrics.discrimination import (
     AUCResult,
-    CohensDResult,
     GiniResult,
     KSResult,
     _auc_from_arrays,
-    _cohens_d_from_arrays,
-    _delong_components,
     _ks_from_arrays,
+)
+from model_crafter.metrics.effect_size import (
+    CohensDResult,
+    _cohens_d_from_arrays,
 )
 from model_crafter.metrics.rank import (
     GainsCurve,
@@ -69,6 +70,7 @@ from model_crafter.metrics.rank import (
 )
 from model_crafter.metrics.stability import PSIResult
 from model_crafter.metrics.stability import psi as _psi_call
+from model_crafter.performance._delong import _delong_components, _midrank
 
 __all__ = [
     "CalibrationReport",
@@ -351,8 +353,6 @@ def _delong_se(
     neg = ~pos
     m = int(pos.sum())
     n = int(neg.sum())
-    from model_crafter.metrics.classification import _midrank
-
     s = scores
     s_pos = s[pos]
     s_neg = s[neg]
