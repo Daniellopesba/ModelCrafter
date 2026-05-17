@@ -1,17 +1,11 @@
-"""model_crafter — a Python package for credit risk modeling that feels like pen and paper.
+"""model_crafter — credit risk modeling that reads like pen-and-paper math.
 
-See DESIGN.md for the architectural contract and AGENTS.md for the build plan.
-
-Phase 1–3 public surface — re-exports follow the AGENTS.md per-phase scopes.
-The reference end-to-end example in DESIGN.md §10 is the north star for what
-should be importable from ``model_crafter``.
+DESIGN.md is the architectural contract; the end-to-end example in §10 is
+the north star for what should be importable from ``model_crafter``.
+AGENTS.md tracks how the public surface was built phase-by-phase.
 """
 
-# Phase 1: spec, solve, predict, OLS, assumption framework
 from model_crafter.assumptions import check_assumptions
-
-# Phase 4: basis terms, WoE / binned, interactions, binning_table
-# Phase 6: inspection helpers (coefficients, diagnostics, hat_matrix, influence)
 from model_crafter.inspect import (
     Diagnostics,
     Influence,
@@ -36,11 +30,7 @@ from model_crafter.metrics import (
     log_loss,
     psi,
 )
-
-# Phase 2: penalties + lambda path
 from model_crafter.penalty import NoPenalty, l1, l2
-
-# Phase 3 + 5: performance bundle, temporal / segmented / comparison
 from model_crafter.performance import (
     compare,
     delong_test,
@@ -48,9 +38,8 @@ from model_crafter.performance import (
     performance_by_segment,
     performance_over_time,
 )
+from model_crafter.solution import SegmentedSolution
 from model_crafter.solve import predict, solve
-
-# Phase 6: segmented spec / solution
 from model_crafter.spec import SegmentedSpec, linear, segmented
 from model_crafter.terms import (
     binned,
@@ -68,8 +57,6 @@ from model_crafter.terms import (
     tree_bins,
     woe,
 )
-
-# Phase 3: temporal CV, tune, bootstrap
 from model_crafter.validation import (
     bootstrap,
     cross_validate,
@@ -86,8 +73,6 @@ from model_crafter.validation import (
 )
 
 __version__ = "0.0.0"
-
-from model_crafter.solution import SegmentedSolution
 
 __all__ = [
     "Diagnostics",

@@ -57,14 +57,12 @@ def _binning_terms(spec: Any) -> list[Any]:
 class AtLeastOneEventPerBin:
     r"""Every WoE / binned-term bin contains at least one event and one non-event.
 
-    Severity: HARD. Without this the un-smoothed WoE value is
-    :math:`\pm \infty`; with Laplace smoothing it is merely a very large
-    finite number, but the bin's information value is still essentially
-    determined by the smoothing constant rather than by the data. The
-    check flags this so the user can either coarsen the binning or drop
-    the offending bin.
+    Severity: HARD. Without this the un-smoothed WoE is :math:`\pm \infty`;
+    with Laplace smoothing it is merely large, but the bin's information
+    value is then driven by the smoothing constant rather than the data.
+    Coarsen the binning or drop the offending bin.
 
-    The pre-smoothing counts are taken from each term's
+    Pre-smoothing counts come from each term's
     :class:`~model_crafter.terms.woe.BinningResult`.
     """
 
