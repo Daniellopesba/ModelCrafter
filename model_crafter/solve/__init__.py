@@ -41,6 +41,9 @@ from model_crafter.solve import (
     ols as _ols,  # noqa: F401 — self-registering import
 )
 from model_crafter.solve import (
+    prox_cd as _prox_cd,  # noqa: F401 — self-registering import
+)
+from model_crafter.solve import (
     ridge as _ridge,  # noqa: F401 — self-registering import
 )
 from model_crafter.solve._registry import (
