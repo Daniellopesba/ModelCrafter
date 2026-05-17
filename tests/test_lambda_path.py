@@ -18,13 +18,12 @@ production classes have the same names).
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import numpy as np
 import pandas as pd
 import pytest
 
 from model_crafter.loss import squared_error
+from model_crafter.penalty import L1Penalty, L2Penalty
 from model_crafter.spec import LinearSpec
 from model_crafter.terms.base import _normalize_features
 from model_crafter.validation.lambda_path import (
@@ -32,55 +31,6 @@ from model_crafter.validation.lambda_path import (
     lambda_path,
     log_grid,
 )
-
-# ---------------------------------------------------------------------------
-# Penalty stubs (mimic P2.A's contract by class name + .lam / .parts).
-# ---------------------------------------------------------------------------
-
-
-@dataclass(frozen=True)
-class L1Penalty:
-    lam: float
-
-    @property
-    def assumptions(self) -> tuple:
-        return ()
-
-    def value(self, beta: np.ndarray) -> float:
-        return float(self.lam * np.sum(np.abs(beta)))
-
-    def __add__(self, other: object):
-        return PenaltySum(parts=(self, other))
-
-
-@dataclass(frozen=True)
-class L2Penalty:
-    lam: float
-
-    @property
-    def assumptions(self) -> tuple:
-        return ()
-
-    def value(self, beta: np.ndarray) -> float:
-        return float(0.5 * self.lam * np.sum(beta * beta))
-
-    def __add__(self, other: object):
-        return PenaltySum(parts=(self, other))
-
-
-@dataclass(frozen=True)
-class PenaltySum:
-    parts: tuple
-
-    @property
-    def assumptions(self) -> tuple:
-        return ()
-
-    def value(self, beta: np.ndarray) -> float:
-        return float(sum(p.value(beta) for p in self.parts))
-
-    def __add__(self, other: object):
-        return PenaltySum(parts=(*self.parts, other))
 
 
 def _spec(penalty, target="y", features=("x1", "x2")) -> LinearSpec:

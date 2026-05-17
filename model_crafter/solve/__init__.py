@@ -31,7 +31,15 @@ import pandas as pd
 from model_crafter._internal.design import INTERCEPT_NAME, build_design
 from model_crafter._internal.linalg import find_rank_deficient_columns
 from model_crafter.solution import Solution
-from model_crafter.solve import ols as _ols  # noqa: F401 — self-registering import
+from model_crafter.solve import (
+    coordinate as _coordinate,  # noqa: F401 — self-registering import
+)
+from model_crafter.solve import (
+    ols as _ols,  # noqa: F401 — self-registering import
+)
+from model_crafter.solve import (
+    ridge as _ridge,  # noqa: F401 — self-registering import
+)
 from model_crafter.solve._registry import (
     SolverInputs,
     SolverOutputs,

@@ -34,7 +34,6 @@ tested separately by a stub-penalty test below.
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -43,62 +42,13 @@ import pandas as pd
 import pytest
 import statsmodels.api as sm
 
+from model_crafter.penalty import L1Penalty, L2Penalty, PenaltySum
 from model_crafter.solve.coordinate import (
     _split_enet_parts,
     coordinate_descent_path,
     solve_enet_cd,
     solve_lasso_cd,
 )
-
-# ---------------------------------------------------------------------------
-# Penalty stubs (matching P2.A's documented contract by class name)
-# ---------------------------------------------------------------------------
-
-
-@dataclass(frozen=True)
-class L1Penalty:
-    lam: float
-
-    @property
-    def assumptions(self) -> tuple:
-        return ()
-
-    def value(self, beta: np.ndarray) -> float:
-        return float(self.lam * np.sum(np.abs(beta)))
-
-    def __add__(self, other: object) -> Any:
-        return PenaltySum(parts=(self, other))
-
-
-@dataclass(frozen=True)
-class L2Penalty:
-    lam: float
-
-    @property
-    def assumptions(self) -> tuple:
-        return ()
-
-    def value(self, beta: np.ndarray) -> float:
-        return float(0.5 * self.lam * np.sum(beta * beta))
-
-    def __add__(self, other: object) -> Any:
-        return PenaltySum(parts=(self, other))
-
-
-@dataclass(frozen=True)
-class PenaltySum:
-    parts: tuple
-
-    @property
-    def assumptions(self) -> tuple:
-        return ()
-
-    def value(self, beta: np.ndarray) -> float:
-        return float(sum(p.value(beta) for p in self.parts))
-
-    def __add__(self, other: object) -> Any:
-        return PenaltySum(parts=(*self.parts, other))
-
 
 # ---------------------------------------------------------------------------
 # Helpers
