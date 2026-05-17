@@ -36,8 +36,12 @@ PROSTATE = Path(__file__).resolve().parent.parent / "data" / "prostate.csv"
 
 
 def test_public_api_surface_phase1() -> None:
-    """Phase-1 scope exports exactly the names DESIGN.md §10 uses here."""
-    expected = {
+    """Phase-1 scope names remain exported as later phases expand the surface.
+
+    Originally a strict equality check; relaxed at P3.INTEG since the public
+    API now spans Phases 1–3 per DESIGN.md §10's north-star example.
+    """
+    phase1_names = {
         "NoPenalty",
         "__version__",
         "check_assumptions",
@@ -46,8 +50,8 @@ def test_public_api_surface_phase1() -> None:
         "solve",
         "squared_error",
     }
-    assert set(mc.__all__) == expected
-    for name in expected:
+    assert phase1_names.issubset(set(mc.__all__))
+    for name in phase1_names:
         assert hasattr(mc, name), f"model_crafter.{name} missing"
 
 

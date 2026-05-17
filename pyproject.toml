@@ -31,3 +31,6 @@ packages = ["model_crafter"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+markers = [
+    "slow: marks tests that take longer than ~1 second (deselect with -m 'not slow')",
+]
