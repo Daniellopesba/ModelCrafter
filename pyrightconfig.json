@@ -1,0 +1,9 @@
+{
+  "include": ["model_crafter", "tests"],
+  "exclude": ["**/__pycache__", ".venv", "build", "dist", "notebooks"],
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "error",
+  "reportMissingTypeStubs": "none",
+  "useLibraryCodeForTypes": true
+}
