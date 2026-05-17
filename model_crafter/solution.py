@@ -21,6 +21,7 @@ diagnostic (ESL §3.4.3).
 
 from __future__ import annotations
 
+import html
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -28,12 +29,12 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 import pandas as pd
 
-from model_crafter.spec import LinearSpec
+from model_crafter.spec import LinearSpec, SegmentedSpec
 
 if TYPE_CHECKING:
     from model_crafter.assumptions import AssumptionReport
 
-__all__ = ["BootstrappedSolution", "Solution"]
+__all__ = ["BootstrappedSolution", "SegmentedSolution", "Solution"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,6 +86,23 @@ class Solution:
             )
         if self.n_obs < 0:
             raise ValueError(f"n_obs must be non-negative; got {self.n_obs}")
+
+    def _repr_html_(self) -> str:
+        target = html.escape(str(self.spec.target))
+        loss_name = html.escape(type(self.spec.loss).__name__)
+        coef_df = pd.DataFrame({"estimate": self.coefficients})
+        if self.coefficient_se is not None:
+            coef_df["std_error"] = self.coefficient_se
+        coef_table = coef_df.to_html(border=0, classes="mc-coef")
+        return (
+            f"<div class='mc-solution'>"
+            f"<strong>Solution</strong> "
+            f"<span>target={target}, loss={loss_name}, "
+            f"n_obs={self.n_obs:,}, "
+            f"converged={self.converged}</span>"
+            f"{coef_table}"
+            f"</div>"
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -310,4 +328,141 @@ class BootstrappedSolution:
             f"BootstrappedSolution(method={self.method!r}, "
             f"n_boot={self.n_boot}, "
             f"n_coef={len(self.base.design_columns)})"
+        )
+
+    def _repr_html_(self) -> str:
+        method = html.escape(self.method)
+        try:
+            ci_df = self.coefficient_ci()
+        except Exception:  # pragma: no cover - defensive
+            ci_df = pd.DataFrame()
+        ci_table = ci_df.to_html(border=0, classes="mc-bootstrap-ci") if not ci_df.empty else "<p>(empty CI)</p>"
+        return (
+            f"<div class='mc-bootstrapped-solution'>"
+            f"<strong>BootstrappedSolution</strong> "
+            f"<span>method={method}, n_boot={self.n_boot}, "
+            f"n_coef={len(self.base.design_columns)}</span>"
+            f"<h4>95% percentile CIs</h4>"
+            f"{ci_table}"
+            f"</div>"
+        )
+
+
+# ---------------------------------------------------------------------------
+# SegmentedSolution (Phase 6, DESIGN.md §3.4)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class SegmentedSolution:
+    """Per-segment fitted :class:`Solution` bundle (DESIGN.md §3.4).
+
+    A :class:`SegmentedSolution` is the immutable artefact of solving a
+    :class:`~model_crafter.spec.SegmentedSpec`: one independent
+    :class:`Solution` per unique value of the segmentation column.
+
+    Attributes
+    ----------
+    spec
+        The :class:`~model_crafter.spec.SegmentedSpec` that produced this
+        solution.
+    segments
+        ``dict`` mapping (stringified) segment key to its fitted
+        :class:`Solution`. Each per-segment ``Solution`` carries its own
+        ``assumptions`` :class:`AssumptionReport`.
+    n_obs
+        Total number of observations across all per-segment fits — the
+        sum of ``segments[k].n_obs`` for each ``k``.
+
+    Notes
+    -----
+    Mapping-style accessors are provided for ergonomics: ``sol["A"]`` is
+    sugar for ``sol.segments["A"]``; ``for key in sol`` iterates over keys
+    in declaration order; ``sol.keys()`` mirrors ``dict.keys``.
+    """
+
+    spec: SegmentedSpec
+    segments: dict[str, Solution]
+    n_obs: int
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.spec, SegmentedSpec):
+            raise TypeError(
+                f"spec must be a SegmentedSpec; got {type(self.spec).__name__}"
+            )
+        if not isinstance(self.segments, dict):
+            raise TypeError("segments must be a dict[str, Solution]")
+        for k, v in self.segments.items():
+            if not isinstance(k, str):
+                raise TypeError(
+                    f"segment key {k!r} must be a string; got "
+                    f"{type(k).__name__}"
+                )
+            if not isinstance(v, Solution):
+                raise TypeError(
+                    f"segments[{k!r}] must be a Solution; got "
+                    f"{type(v).__name__}"
+                )
+        if self.n_obs < 0:
+            raise ValueError(f"n_obs must be non-negative; got {self.n_obs}")
+
+    # ------------------------------------------------------------------
+    # Mapping ergonomics
+    # ------------------------------------------------------------------
+
+    def __getitem__(self, key: str) -> Solution:
+        return self.segments[key]
+
+    def __iter__(self):
+        return iter(self.segments)
+
+    def __len__(self) -> int:
+        return len(self.segments)
+
+    def keys(self):
+        """Return the segment keys (same order as ``segments``)."""
+        return self.segments.keys()
+
+    def values(self):
+        """Return the per-segment :class:`Solution`\\ s."""
+        return self.segments.values()
+
+    def items(self):
+        """Return ``(key, Solution)`` pairs."""
+        return self.segments.items()
+
+    def __repr__(self) -> str:
+        keys = list(self.segments.keys())
+        n_seg = len(keys)
+        return (
+            f"SegmentedSolution(by={self.spec.by!r}, "
+            f"n_segments={n_seg}, n_obs={self.n_obs:,}, "
+            f"segments={keys!r})"
+        )
+
+    def _repr_html_(self) -> str:
+        by_safe = html.escape(self.spec.by)
+        rows = []
+        for k, sub in self.segments.items():
+            n_coef = len(sub.design_columns)
+            rows.append(
+                f"<tr><td>{html.escape(k)}</td>"
+                f"<td>{sub.n_obs:,}</td>"
+                f"<td>{n_coef}</td>"
+                f"<td>{sub.converged}</td></tr>"
+            )
+        body = (
+            "<table class='mc-segmented'>"
+            "<thead><tr><th>Segment</th><th>n_obs</th>"
+            "<th>n_coef</th><th>converged</th></tr></thead>"
+            f"<tbody>{''.join(rows)}</tbody>"
+            "</table>"
+        )
+        return (
+            f"<div class='mc-segmented-solution'>"
+            f"<strong>SegmentedSolution</strong> "
+            f"<span>by={by_safe}, n_segments={len(self.segments)}, "
+            f"n_obs={self.n_obs:,}</span>"
+            f"{body}"
+            f"</div>"
         )

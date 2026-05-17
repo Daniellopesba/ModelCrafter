@@ -33,6 +33,7 @@ Solution contract (only used when ``requires_solution=True``):
 
 from __future__ import annotations
 
+import html
 import warnings
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -120,6 +121,46 @@ class AssumptionReport:
                 if r.suggestion:
                     lines.append(f"           -> {r.suggestion}")
         return "\n".join(lines)
+
+    def _repr_html_(self) -> str:
+        if not self.results:
+            return "<div class='mc-assumption-report'>AssumptionReport (empty)</div>"
+        grouped = self.by_severity()
+        section_html: list[str] = []
+        for sev in (Severity.HARD, Severity.SOFT, Severity.INFO):
+            items = grouped[sev]
+            if not items:
+                continue
+            rows = []
+            for r in items:
+                marker = "PASS" if r.passed else "FAIL"
+                stat = (
+                    f"{r.statistic:.4g}" if r.statistic is not None else "&mdash;"
+                )
+                sugg = html.escape(r.suggestion) if r.suggestion else ""
+                rows.append(
+                    f"<tr>"
+                    f"<td>{marker}</td>"
+                    f"<td>{html.escape(r.name)}</td>"
+                    f"<td>{html.escape(r.message)}</td>"
+                    f"<td>{stat}</td>"
+                    f"<td>{sugg}</td>"
+                    f"</tr>"
+                )
+            section_html.append(
+                f"<h4>[{html.escape(sev.value.upper())}]</h4>"
+                "<table class='mc-assumption-report'>"
+                "<thead><tr><th>status</th><th>name</th><th>message</th>"
+                "<th>statistic</th><th>suggestion</th></tr></thead>"
+                f"<tbody>{''.join(rows)}</tbody>"
+                "</table>"
+            )
+        return (
+            "<div class='mc-assumption-report'>"
+            "<strong>AssumptionReport</strong>"
+            + "".join(section_html)
+            + "</div>"
+        )
 
 
 __all__ = [

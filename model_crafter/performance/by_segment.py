@@ -31,6 +31,7 @@ Behaviour notes (documented in ``notes/P5.B.md``):
 
 from __future__ import annotations
 
+import html
 from dataclasses import dataclass
 from typing import Any
 
@@ -108,6 +109,37 @@ class SegmentedPerformanceReport:
         else:
             lines.append("  segments: (none)")
         return "\n".join(lines)
+
+    def _repr_html_(self) -> str:
+        agg = self.aggregate
+        ev_rate = (agg.n_events / agg.n_obs * 100.0) if agg.n_obs > 0 else 0.0
+        rows = []
+        for k in sorted(self.segments.keys()):
+            sub = self.segments[k]
+            rows.append(
+                "<tr>"
+                f"<td>{html.escape(k)}</td>"
+                f"<td>{sub.n_obs:,}</td>"
+                f"<td>{sub.discrimination.auc.value:.4f}</td>"
+                f"<td>{sub.discrimination.ks.value:.4f}</td>"
+                f"<td>{sub.calibration.brier.value:.4f}</td>"
+                "</tr>"
+            )
+        body = (
+            "<table class='mc-segmented-performance'>"
+            "<thead><tr><th>Segment</th><th>n_obs</th>"
+            "<th>AUC</th><th>KS</th><th>Brier</th></tr></thead>"
+            f"<tbody>{''.join(rows) or '<tr><td colspan=5>(none)</td></tr>'}</tbody>"
+            "</table>"
+        )
+        return (
+            "<div class='mc-segmented-performance-report'>"
+            "<strong>SegmentedPerformanceReport</strong> "
+            f"<span>aggregate n={agg.n_obs:,}, events={agg.n_events:,} "
+            f"({ev_rate:.1f}%), AUC={agg.discrimination.auc.value:.4f}</span>"
+            f"{body}"
+            "</div>"
+        )
 
 
 # ---------------------------------------------------------------------------

@@ -29,6 +29,7 @@ lambda** — the grid orientation is the convention; see
 
 from __future__ import annotations
 
+import html
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -79,6 +80,22 @@ class TuneResult:
     solution: Any
     direction: str = "maximize"
 
+    def _repr_html_(self) -> str:
+        curve_html = (
+            self.cv_curve.to_html(border=0, classes="mc-tune-result")
+            if not self.cv_curve.empty
+            else "<p>(empty CV curve)</p>"
+        )
+        return (
+            "<div class='mc-tune-result'>"
+            "<strong>TuneResult</strong> "
+            f"<span>best_param={html.escape(str(self.best_param))}, "
+            f"direction={html.escape(self.direction)}</span>"
+            "<h4>CV curve</h4>"
+            f"{curve_html}"
+            "</div>"
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class NestedCVResult:
@@ -99,6 +116,23 @@ class NestedCVResult:
     outer_metric: pd.DataFrame
     best_params: tuple
     inner_curves: tuple
+
+    def _repr_html_(self) -> str:
+        outer_html = (
+            self.outer_metric.to_html(border=0, classes="mc-nested-cv-result")
+            if not self.outer_metric.empty
+            else "<p>(no outer folds)</p>"
+        )
+        params_str = ", ".join(html.escape(str(p)) for p in self.best_params)
+        return (
+            "<div class='mc-nested-cv-result'>"
+            "<strong>NestedCVResult</strong> "
+            f"<span>n_outer_folds={len(self.outer_metric)}, "
+            f"best_params=[{params_str}]</span>"
+            "<h4>Outer-fold metrics</h4>"
+            f"{outer_html}"
+            "</div>"
+        )
 
 
 # ---------------------------------------------------------------------------

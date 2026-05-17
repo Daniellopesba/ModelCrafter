@@ -122,6 +122,26 @@ class TemporalPerformanceReport:
         fig.tight_layout()
         return fig
 
+    def _repr_html_(self) -> str:
+        n_windows = len(self.reports)
+        if n_windows == 0:
+            return (
+                "<div class='mc-temporal-performance-report'>"
+                "TemporalPerformanceReport (empty)</div>"
+            )
+        body = (
+            self.summary.to_html(border=0, classes="mc-temporal-performance")
+            if not self.summary.empty
+            else "<p>(empty summary)</p>"
+        )
+        return (
+            "<div class='mc-temporal-performance-report'>"
+            f"<strong>TemporalPerformanceReport</strong> "
+            f"<span>n_windows={n_windows}</span>"
+            f"{body}"
+            "</div>"
+        )
+
     def __repr__(self) -> str:
         if len(self.reports) == 0:
             return "TemporalPerformanceReport(empty)"
