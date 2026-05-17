@@ -61,8 +61,15 @@ from model_crafter.assumptions.stability import (
     CoefficientStability,
     ComparableFeatureScales,
     PredictiveStability,
+    SupportContainsPredictData,
 )
 from model_crafter.assumptions.temporal import NoTemporalLeakage
+from model_crafter.assumptions.woe import (
+    AtLeastOneEventPerBin,
+    MinimumBinSize,
+    MonotonicEventRate,
+    WoEMonotonicityPreserved,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,6 +126,7 @@ __all__ = [
     "Assumption",
     "AssumptionError",
     "AssumptionReport",
+    "AtLeastOneEventPerBin",
     "BinaryOrProportionTarget",
     "CheckResult",
     "ClassBalance",
@@ -129,11 +137,15 @@ __all__ = [
     "Independence",
     "LinkAdequacy",
     "LowVIF",
+    "MinimumBinSize",
+    "MonotonicEventRate",
     "NoPerfectSeparation",
     "NoTemporalLeakage",
     "PredictiveStability",
     "ResidualNormality",
     "Severity",
+    "SupportContainsPredictData",
+    "WoEMonotonicityPreserved",
     "check_assumptions",
     "run_assumptions",
 ]

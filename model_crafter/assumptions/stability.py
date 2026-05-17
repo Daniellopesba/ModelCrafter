@@ -22,10 +22,21 @@ Fully implemented (no CV needed):
   ``L2Penalty`` (DESIGN.md §4.3). Computes the ratio of max to min
   column standard deviation across non-intercept design columns and
   warns when it exceeds ``std_ratio_max``.
+
+Predict-time SOFT check:
+
+* :class:`SupportContainsPredictData` — declared by Phase-4 basis terms
+  (``ns``, ``bs``, ``poly``, ``step``, ``smooth``, ``hinge``) per
+  DESIGN.md §4.3. Fires when the fraction of predict-time rows outside
+  the term's training boundary knots exceeds
+  ``extrapolation_threshold``. Reads the training boundary from the
+  solution's ``fit_state`` so it can name the offending column and the
+  exact training range in its message.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, cast
 
@@ -359,6 +370,165 @@ class ComparableFeatureScales:
                     "Standardise features (zero mean, unit std) before "
                     "fitting penalised models — L1/L2 are scale-sensitive "
                     "(ESL §3.4.1)."
+                )
+            ),
+        )
+
+
+# ---------------------------------------------------------------------------
+# SupportContainsPredictData (declared by Phase-4 basis terms)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class SupportContainsPredictData:
+    r"""Predict-time data lies within the basis term's training support.
+
+    Basis expansions (``ns``, ``bs``, ``poly``, ``step``, ``smooth``,
+    ``hinge``) learn knots, orthogonalisation parameters, or breakpoints
+    from the training column. Predict-time inputs that fall outside the
+    training boundary knots are *extrapolations*: the natural cubic
+    spline extends linearly there, the B-spline extends polynomially,
+    the orthogonal polynomial is unconstrained. None of these are
+    necessarily wrong, but they are model decisions the user should make
+    consciously.
+
+    Statistic
+    ---------
+    .. math::
+
+        \mathrm{extrap\_frac} \;=\;
+        \frac{|\{i : x_i < b_l \text{ or } x_i > b_u\}|}{n}
+
+    where :math:`[b_l, b_u]` are the boundary knots learned at fit time.
+
+    Severity
+    --------
+    SOFT — at predict time, if the fraction of out-of-support rows
+    exceeds ``extrapolation_threshold`` (default 0.05) the check fails
+    with a message naming the column, the fraction, and the training
+    range.
+
+    Wiring
+    ------
+    Each Phase-4 basis term declares this assumption in its
+    ``assumptions`` tuple. The training boundary is read from the
+    solution's ``fit_state`` via the term name — the assumption looks
+    for ``fit_state[term.name]['boundary_knots']``.
+
+    Notes
+    -----
+    ``requires_solution=True`` because the check needs the solution's
+    ``fit_state`` to know the training boundary. ``requires_cv=False``
+    — it inspects predict-time data directly, not CV folds.
+    """
+
+    extrapolation_threshold: float = 0.05
+    name: str = "SupportContainsPredictData"
+    severity: Severity = Severity.SOFT
+    requires_solution: bool = True
+    requires_cv: bool = False
+
+    def describe(self) -> str:
+        return (
+            f"fraction of rows outside training knot range "
+            f"<= {self.extrapolation_threshold:.0%} "
+            "(basis-term extrapolation guard)"
+        )
+
+    def check(
+        self,
+        spec: Any,
+        data: Any,
+        *,
+        solution: Any | None = None,
+        cv: Any | None = None,
+    ) -> CheckResult:
+        # Skipped path: with no solution, the training boundary is
+        # unknown. Return a pass with a clear "skipped" message.
+        if solution is None:
+            return CheckResult(
+                name=self.name,
+                severity=self.severity,
+                passed=True,
+                message="skipped: no solution available (predict-time support check)",
+                statistic=None,
+                threshold=self.extrapolation_threshold,
+                suggestion=None,
+            )
+
+        fit_state = getattr(solution, "fit_state", None)
+        if fit_state is None:
+            return CheckResult(
+                name=self.name,
+                severity=self.severity,
+                passed=True,
+                message="skipped: solution.fit_state is empty (predict-time support check)",
+                statistic=None,
+                threshold=self.extrapolation_threshold,
+                suggestion=None,
+            )
+
+        # Walk every basis term in spec.features whose fit_state carries
+        # a 'boundary_knots' entry, and check the data column against it.
+        features = getattr(spec, "features", ()) or ()
+        worst: tuple[float, str, str, tuple[float, float]] | None = None
+        for term in features:
+            term_state = fit_state.get(getattr(term, "name", None))
+            if not isinstance(term_state, Mapping):
+                continue
+            boundary = term_state.get("boundary_knots")
+            if boundary is None:
+                continue
+            col = getattr(term, "col", None)
+            if col is None or col not in getattr(data, "columns", ()):
+                continue
+            x = pd.to_numeric(data[col], errors="coerce")
+            x_arr = np.asarray(x, dtype=float)
+            valid = np.isfinite(x_arr)
+            n = int(valid.sum())
+            if n == 0:
+                continue
+            b_l, b_u = float(boundary[0]), float(boundary[1])
+            outside = (x_arr[valid] < b_l) | (x_arr[valid] > b_u)
+            frac = float(np.mean(outside))
+            if worst is None or frac > worst[0]:
+                worst = (frac, col, getattr(term, "name", str(term)), (b_l, b_u))
+
+        if worst is None:
+            # No basis-term boundary found — vacuously pass.
+            return CheckResult(
+                name=self.name,
+                severity=self.severity,
+                passed=True,
+                message=(
+                    "no basis terms with learned boundary knots "
+                    "(predict-time support check is vacuous)"
+                ),
+                statistic=None,
+                threshold=self.extrapolation_threshold,
+                suggestion=None,
+            )
+
+        frac, col, _term_name, (b_l, b_u) = worst
+        passed = frac <= self.extrapolation_threshold
+        message = (
+            f"feature '{col}': {frac:.1%} of rows outside training knot "
+            f"range [{b_l:.4g}, {b_u:.4g}]"
+        )
+        return CheckResult(
+            name=self.name,
+            severity=self.severity,
+            passed=passed,
+            message=message,
+            statistic=frac,
+            threshold=self.extrapolation_threshold,
+            suggestion=(
+                None
+                if passed
+                else (
+                    "restrict prediction to the training range or refit "
+                    "on a broader sample"
                 )
             ),
         )
