@@ -35,6 +35,9 @@ from model_crafter.solve import (
     coordinate as _coordinate,  # noqa: F401 — self-registering import
 )
 from model_crafter.solve import (
+    irls as _irls,  # noqa: F401 — self-registering import
+)
+from model_crafter.solve import (
     ols as _ols,  # noqa: F401 — self-registering import
 )
 from model_crafter.solve import (
@@ -258,7 +261,12 @@ def predict(sol: Solution, new_data: pd.DataFrame) -> pd.Series:
         )
 
     beta = sol.coefficients.reindex(list(design.columns)).to_numpy(dtype=float)
-    yhat = design.values @ beta
+    eta = design.values @ beta
+    # If the loss carries a link function (e.g. logistic σ(η)), apply it so
+    # mc.predict honours the "output is always a probability" guarantee
+    # (DESIGN.md §3.3). Squared-error has no link; output is η directly.
+    link = getattr(sol.spec.loss, "link", None)
+    yhat = link(eta) if callable(link) else eta
     return pd.Series(yhat, index=new_data.index, name=sol.spec.target)
 
 

@@ -455,16 +455,9 @@ def test_logistic_predicted_probabilities_in_unit_interval(seed: int) -> None:
     assert np.all(p_hat <= 1.0)
 
 
-@pytest.mark.xfail(
-    reason=(
-        "P3.INTEG must wire spec.loss.link into mc.predict so logistic "
-        "models return probabilities. Until then predict() returns eta."
-    ),
-    strict=False,
-)
 def test_predict_returns_probabilities_for_logistic() -> None:
     """``mc.predict(sol, data)`` for a logistic spec returns probabilities
-    in [0, 1]. This xfails until P3.INTEG updates ``solve/__init__.py``."""
+    in [0, 1] (DESIGN.md §3.3 — output is always a probability)."""
     rng = np.random.default_rng(seed=0)
     n = 200
     x = rng.normal(size=n)
