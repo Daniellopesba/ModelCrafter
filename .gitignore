@@ -36,3 +36,6 @@ dist/
 
 # macOS specific files
 .DS_Store
+
+# Agent worktrees
+.claude/worktrees/
