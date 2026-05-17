@@ -62,6 +62,7 @@ from model_crafter.assumptions.stability import (
     ComparableFeatureScales,
     PredictiveStability,
 )
+from model_crafter.assumptions.temporal import NoTemporalLeakage
 
 
 @dataclass(frozen=True, slots=True)
@@ -129,6 +130,7 @@ __all__ = [
     "LinkAdequacy",
     "LowVIF",
     "NoPerfectSeparation",
+    "NoTemporalLeakage",
     "PredictiveStability",
     "ResidualNormality",
     "Severity",
