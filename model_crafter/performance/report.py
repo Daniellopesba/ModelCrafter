@@ -24,6 +24,7 @@ Implementation notes
 
 from __future__ import annotations
 
+import html
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -110,6 +111,26 @@ class DiscriminationReport:
     auc_se: float | None = None
     auc_ci_level: float = 0.95
 
+    def _repr_html_(self) -> str:
+        auc_ci = ""
+        if self.auc_ci is not None:
+            lvl = int(round(self.auc_ci_level * 100))
+            auc_ci = (
+                f" <span>({lvl}% CI: {self.auc_ci[0]:.4f} – "
+                f"{self.auc_ci[1]:.4f}, DeLong)</span>"
+            )
+        return (
+            "<div class='mc-discrimination-report'>"
+            "<strong>Discrimination</strong>"
+            "<table><tbody>"
+            f"<tr><th>AUC</th><td>{self.auc.value:.4f}{auc_ci}</td></tr>"
+            f"<tr><th>Gini</th><td>{self.gini.value:.4f}</td></tr>"
+            f"<tr><th>KS</th><td>{self.ks.value:.4f} "
+            f"(at score {self.ks.at_score:.4f})</td></tr>"
+            f"<tr><th>Cohen's d</th><td>{self.cohens_d.value:.4f}</td></tr>"
+            "</tbody></table></div>"
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class CalibrationReport:
@@ -121,6 +142,22 @@ class CalibrationReport:
     log_loss: LogLossResult
     slope_intercept: CalibrationFit
 
+    def _repr_html_(self) -> str:
+        slope = self.slope_intercept.slope
+        intercept = self.slope_intercept.intercept
+        return (
+            "<div class='mc-calibration-report'>"
+            "<strong>Calibration</strong>"
+            "<table><tbody>"
+            f"<tr><th>Brier</th><td>{self.brier.value:.4f}</td></tr>"
+            f"<tr><th>ECE ({self.ece.n_bins} bins)</th>"
+            f"<td>{self.ece.value:.4f}</td></tr>"
+            f"<tr><th>Log-loss</th><td>{self.log_loss.value:.4f}</td></tr>"
+            f"<tr><th>Slope / Intercept</th>"
+            f"<td>{slope:.3f} / {intercept:+.3f}</td></tr>"
+            "</tbody></table></div>"
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class StabilityReport:
@@ -128,6 +165,19 @@ class StabilityReport:
 
     psi: PSIResult
     reference_label: str = "reference"
+
+    def _repr_html_(self) -> str:
+        psi_v = self.psi.value
+        tag = "low" if psi_v < 0.10 else ("moderate" if psi_v < 0.25 else "high")
+        return (
+            "<div class='mc-stability-report'>"
+            "<strong>Stability</strong>"
+            "<table><tbody>"
+            f"<tr><th>PSI vs reference</th>"
+            f"<td>{psi_v:.3f} ({tag}; reference: "
+            f"{html.escape(self.reference_label)})</td></tr>"
+            "</tbody></table></div>"
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -144,6 +194,18 @@ class DistributionReport:
         return (
             f"DistributionReport(mean={self.mean:.4f}, median={self.median:.4f}, "
             f"range=[{self.p_min:.4f}, {self.p_max:.4f}], n={self.n_obs:g})"
+        )
+
+    def _repr_html_(self) -> str:
+        return (
+            "<div class='mc-distribution-report'>"
+            "<strong>Distribution</strong>"
+            "<table><tbody>"
+            f"<tr><th>Mean / Median p̂</th>"
+            f"<td>{self.mean:.4f} / {self.median:.4f}</td></tr>"
+            f"<tr><th>Score range</th>"
+            f"<td>[{self.p_min:.4f}, {self.p_max:.4f}]</td></tr>"
+            "</tbody></table></div>"
         )
 
 
@@ -244,6 +306,26 @@ class PerformanceReport:
             f"  Score range        [{d.p_min:.4f}, {d.p_max:.4f}]"
         )
         return "\n".join(lines).rstrip()
+
+    def _repr_html_(self) -> str:
+        n = self.n_obs
+        ev = self.n_events
+        ev_rate = (ev / n * 100.0) if n > 0 else 0.0
+        header = (
+            "<div class='mc-performance-report'>"
+            "<strong>PerformanceReport</strong> "
+            f"<span>n={n:,}, events={ev:,} ({ev_rate:.1f}%)</span>"
+        )
+        parts = [
+            header,
+            self.discrimination._repr_html_(),
+            self.calibration._repr_html_(),
+        ]
+        if self.stability is not None:
+            parts.append(self.stability._repr_html_())
+        parts.append(self.distribution._repr_html_())
+        parts.append("</div>")
+        return "".join(parts)
 
 
 # ---------------------------------------------------------------------------

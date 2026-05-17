@@ -11,7 +11,16 @@ should be importable from ``model_crafter``.
 from model_crafter.assumptions import check_assumptions
 
 # Phase 4: basis terms, WoE / binned, interactions, binning_table
-from model_crafter.inspect import binning_table
+# Phase 6: inspection helpers (coefficients, diagnostics, hat_matrix, influence)
+from model_crafter.inspect import (
+    Diagnostics,
+    Influence,
+    binning_table,
+    coefficients,
+    diagnostics,
+    hat_matrix,
+    influence,
+)
 from model_crafter.loss import logistic, squared_error
 from model_crafter.metrics import (
     auc,
@@ -40,7 +49,9 @@ from model_crafter.performance import (
     performance_over_time,
 )
 from model_crafter.solve import predict, solve
-from model_crafter.spec import linear
+
+# Phase 6: segmented spec / solution
+from model_crafter.spec import SegmentedSpec, linear, segmented
 from model_crafter.terms import (
     binned,
     bs,
@@ -76,8 +87,14 @@ from model_crafter.validation import (
 
 __version__ = "0.0.0"
 
+from model_crafter.solution import SegmentedSolution
+
 __all__ = [
+    "Diagnostics",
+    "Influence",
     "NoPenalty",
+    "SegmentedSolution",
+    "SegmentedSpec",
     "__version__",
     "auc",
     "binned",
@@ -89,15 +106,19 @@ __all__ = [
     "calibration_slope_intercept",
     "categorical",
     "check_assumptions",
+    "coefficients",
     "cohens_d",
     "cross",
     "cross_validate",
     "cumulative_gains",
     "delong_test",
+    "diagnostics",
     "ece",
     "expanding_window",
     "gini",
+    "hat_matrix",
     "hinge",
+    "influence",
     "interact",
     "ks",
     "l1",
@@ -123,6 +144,7 @@ __all__ = [
     "psi",
     "purged_kfold",
     "rolling_window",
+    "segmented",
     "smooth",
     "solve",
     "squared_error",

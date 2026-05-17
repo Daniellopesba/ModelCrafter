@@ -30,6 +30,7 @@ metric table in the ``__repr__`` is still informative.
 
 from __future__ import annotations
 
+import html
 from dataclasses import dataclass
 from itertools import combinations
 from typing import Any
@@ -175,6 +176,46 @@ class Comparison:
                 "(square, symmetric, NaN diagonal)."
             )
         return "\n".join(lines).rstrip()
+
+    def _repr_html_(self) -> str:
+        names = list(self.reports.keys())
+        if not names:
+            return "<div class='mc-comparison'>Comparison(empty)</div>"
+
+        # Build a metric × solution table.
+        def _row(label: str, getter) -> str:
+            cells = [f"<th>{html.escape(label)}</th>"]
+            for nm in names:
+                v = getter(self.reports[nm])
+                cells.append(
+                    f"<td>{v:.4f}</td>"
+                    if v is not None
+                    else "<td>&mdash;</td>"
+                )
+            return "<tr>" + "".join(cells) + "</tr>"
+
+        rows = [
+            _row("AUC", lambda r: r.discrimination.auc.value),
+            _row("KS", lambda r: r.discrimination.ks.value),
+            _row("Brier", lambda r: r.calibration.brier.value),
+            _row("Log-loss", lambda r: r.calibration.log_loss.value),
+            _row(
+                "PSI vs reference",
+                lambda r: r.stability.psi.value if r.stability is not None else None,
+            ),
+        ]
+        header = (
+            "<thead><tr><th>metric</th>"
+            + "".join(f"<th>{html.escape(n)}</th>" for n in names)
+            + "</tr></thead>"
+        )
+        return (
+            "<div class='mc-comparison'>"
+            "<strong>Comparison</strong>"
+            "<table class='mc-comparison'>"
+            f"{header}<tbody>{''.join(rows)}</tbody>"
+            "</table></div>"
+        )
 
 
 # ---------------------------------------------------------------------------

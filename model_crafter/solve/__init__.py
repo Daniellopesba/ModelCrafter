@@ -23,14 +23,14 @@ rank-deficient design raises before any compute), and post-fit checks run
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, overload
 
 import numpy as np
 import pandas as pd
 
 from model_crafter._internal.design import INTERCEPT_NAME, build_design
 from model_crafter._internal.linalg import find_rank_deficient_columns
-from model_crafter.solution import Solution
+from model_crafter.solution import SegmentedSolution, Solution
 from model_crafter.solve import (
     coordinate as _coordinate,  # noqa: F401 — self-registering import
 )
@@ -48,7 +48,7 @@ from model_crafter.solve._registry import (
     SolverOutputs,
     get_solver,
 )
-from model_crafter.spec import LinearSpec
+from model_crafter.spec import LinearSpec, SegmentedSpec
 
 __all__ = ["predict", "solve"]
 
@@ -102,8 +102,36 @@ def _extract_y(spec: LinearSpec, data: pd.DataFrame) -> np.ndarray:
     return y
 
 
+@overload
+def solve(
+    spec: SegmentedSpec,
+    data: pd.DataFrame,
+    *,
+    weights: str | np.ndarray | pd.Series | None = ...,
+    method: str | None = ...,
+    on_violation: str = ...,
+    suppress: tuple = ...,
+    classical_inference: bool = ...,
+    stability_splitter: Any = ...,
+) -> SegmentedSolution: ...
+
+
+@overload
 def solve(
     spec: LinearSpec,
+    data: pd.DataFrame,
+    *,
+    weights: str | np.ndarray | pd.Series | None = ...,
+    method: str | None = ...,
+    on_violation: str = ...,
+    suppress: tuple = ...,
+    classical_inference: bool = ...,
+    stability_splitter: Any = ...,
+) -> Solution: ...
+
+
+def solve(
+    spec: LinearSpec | SegmentedSpec,
     data: pd.DataFrame,
     *,
     weights: str | np.ndarray | pd.Series | None = None,
@@ -112,7 +140,7 @@ def solve(
     suppress: tuple = (),
     classical_inference: bool = False,
     stability_splitter: Any = None,
-) -> Solution:
+) -> Solution | SegmentedSolution:
     """Fit ``spec`` to ``data`` and return a :class:`Solution`.
 
     See DESIGN.md §2.4 for the dispatch rules, §4.2 for the assumption flow.
@@ -145,8 +173,28 @@ def solve(
     """
     from model_crafter.assumptions import AssumptionError, run_assumptions
 
+    # SegmentedSpec dispatches to the per-segment runner (DESIGN.md §3.4).
+    # The check happens before LinearSpec type-narrowing because a
+    # SegmentedSpec is *not* a LinearSpec.
+    if isinstance(spec, SegmentedSpec):
+        from model_crafter.solve.segmented import solve_segmented
+
+        return solve_segmented(
+            spec,
+            data,
+            weights=weights,
+            method=method,
+            on_violation=on_violation,
+            suppress=suppress,
+            classical_inference=classical_inference,
+            stability_splitter=stability_splitter,
+        )
+
     if not isinstance(spec, LinearSpec):
-        raise TypeError(f"spec must be a LinearSpec; got {type(spec).__name__}")
+        raise TypeError(
+            f"spec must be a LinearSpec or SegmentedSpec; "
+            f"got {type(spec).__name__}"
+        )
     if not isinstance(data, pd.DataFrame):
         raise TypeError(f"data must be a pandas DataFrame; got {type(data).__name__}")
 
@@ -235,16 +283,38 @@ def solve(
     )
 
 
-def predict(sol: Solution, new_data: pd.DataFrame) -> pd.Series:
+@overload
+def predict(sol: Solution, new_data: pd.DataFrame) -> pd.Series: ...
+
+
+@overload
+def predict(sol: SegmentedSolution, new_data: pd.DataFrame) -> pd.Series: ...
+
+
+def predict(
+    sol: Solution | SegmentedSolution, new_data: pd.DataFrame
+) -> pd.Series:
     """Apply a fitted ``sol`` to ``new_data`` and return :math:`\\hat y`.
 
     Returns a :class:`pandas.Series` aligned with ``new_data.index``. For
     Phase 1's squared-error loss the output is :math:`X\\beta`; future
     losses (logistic) will return probabilities. DESIGN.md §3.3 makes that
     the package's universal output convention.
+
+    A :class:`SegmentedSolution` (DESIGN.md §3.4) is routed to the
+    per-segment :func:`predict_segmented`: each row is dispatched to its
+    segment's :class:`Solution` and the merged result is returned. Unseen
+    segments produce ``NaN`` plus a warning.
     """
+    if isinstance(sol, SegmentedSolution):
+        from model_crafter.solve.segmented import predict_segmented
+
+        return predict_segmented(sol, new_data)
     if not isinstance(sol, Solution):
-        raise TypeError(f"sol must be a Solution; got {type(sol).__name__}")
+        raise TypeError(
+            f"sol must be a Solution or SegmentedSolution; "
+            f"got {type(sol).__name__}"
+        )
     if not isinstance(new_data, pd.DataFrame):
         raise TypeError(
             f"new_data must be a pandas DataFrame; got {type(new_data).__name__}"

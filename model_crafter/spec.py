@@ -22,7 +22,7 @@ from model_crafter.loss import Loss
 from model_crafter.penalty import NoPenalty, Penalty
 from model_crafter.terms.base import Term, _normalize_features
 
-__all__ = ["LinearSpec", "linear"]
+__all__ = ["LinearSpec", "SegmentedSpec", "linear", "segmented"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -116,3 +116,81 @@ def linear(
 
 # These are referenced by `Any` import keep-alive in some toolchains; silence unused.
 _ = Any
+
+
+# ---------------------------------------------------------------------------
+# SegmentedSpec (Phase 6, DESIGN.md §3.4)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class SegmentedSpec:
+    """Declarative spec for a segmented linear-predictor model.
+
+    A :class:`SegmentedSpec` wraps a base :class:`LinearSpec` together with
+    the name of a column in the data frame whose distinct values partition
+    the dataset. At solve time one :class:`~model_crafter.solution.Solution`
+    is fit per segment value; predictions route by segment.
+
+    See DESIGN.md §3.4 (Segmentation) for the credit-risk motivation: a
+    single declarative spec produces per-segment solutions, per-segment
+    assumption reports, per-segment bootstraps, and per-segment performance
+    reports. ESL §3.7 is the underlying methodological reference — the
+    segmented model is a piecewise-constant interaction with the segment
+    column.
+
+    Attributes
+    ----------
+    by
+        Column name in the training data whose unique values define the
+        segments.
+    base
+        The :class:`LinearSpec` applied per segment. The same spec is
+        re-fit independently within each segment slice.
+    """
+
+    by: str
+    base: LinearSpec
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.by, str):
+            raise TypeError(
+                f"by must be a column name (str); got {type(self.by).__name__}"
+            )
+        if not self.by:
+            raise ValueError("by must be a non-empty column name")
+        if not isinstance(self.base, LinearSpec):
+            raise TypeError(
+                f"base must be a LinearSpec; got {type(self.base).__name__}"
+            )
+
+
+def segmented(*, by: str, base: LinearSpec) -> SegmentedSpec:
+    """Construct a :class:`SegmentedSpec` (DESIGN.md §3.4).
+
+    Parameters
+    ----------
+    by
+        Name of the segmentation column in the data passed to
+        :func:`~model_crafter.solve.solve`. Each distinct value defines a
+        segment.
+    base
+        The :class:`LinearSpec` re-fit independently within each segment.
+
+    Returns
+    -------
+    SegmentedSpec
+        Frozen, hashable value.
+
+    Examples
+    --------
+    >>> spec = mc.segmented(
+    ...     by="product",
+    ...     base=mc.linear(
+    ...         target="default_90d",
+    ...         features=[mc.woe("income", bins=mc.monotonic())],
+    ...         loss=mc.logistic,
+    ...     ),
+    ... )
+    """
+    return SegmentedSpec(by=by, base=base)

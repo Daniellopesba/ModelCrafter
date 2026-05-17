@@ -107,6 +107,21 @@ class CVResult:
             rows.append(row)
         return pd.DataFrame(rows)
 
+    def _repr_html_(self) -> str:
+        summ = self.summary()
+        body = (
+            "<p>(no folds)</p>"
+            if summ.empty
+            else summ.to_html(border=0, classes="mc-cv-result")
+        )
+        n_folds = len(self.fold_results)
+        return (
+            "<div class='mc-cv-result'>"
+            f"<strong>CVResult</strong> <span>n_folds={n_folds}</span>"
+            f"{body}"
+            "</div>"
+        )
+
 
 # ---------------------------------------------------------------------------
 # Public runner
