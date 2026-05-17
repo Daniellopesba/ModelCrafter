@@ -53,6 +53,7 @@ from model_crafter.assumptions.classical import (
 from model_crafter.assumptions.prerequisites import FullRankDesign
 from model_crafter.assumptions.stability import (
     CoefficientStability,
+    ComparableFeatureScales,
     PredictiveStability,
 )
 
@@ -113,6 +114,7 @@ __all__ = [
     "AssumptionReport",
     "CheckResult",
     "CoefficientStability",
+    "ComparableFeatureScales",
     "FullRankDesign",
     "Homoscedasticity",
     "Independence",

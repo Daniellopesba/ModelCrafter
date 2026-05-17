@@ -15,6 +15,13 @@ Currently implemented as stubs:
 
 When ``cv`` is provided (Phase 3 onwards), the real checks compute the
 documented statistic and compare against the threshold.
+
+Fully implemented (no CV needed):
+
+* :class:`ComparableFeatureScales` — declared by ``L1Penalty`` and
+  ``L2Penalty`` (DESIGN.md §4.3). Computes the ratio of max to min
+  column standard deviation across non-intercept design columns and
+  warns when it exceeds ``std_ratio_max``.
 """
 
 from __future__ import annotations
@@ -25,6 +32,7 @@ from typing import Any, cast
 import numpy as np
 import pandas as pd
 
+from model_crafter.assumptions._common import materialise_design
 from model_crafter.assumptions._types import CheckResult, Severity
 
 
@@ -239,3 +247,118 @@ def _real_predictive_stability(spec: PredictiveStability, cv: Any) -> CheckResul
             "more data, a temporal splitter, or stronger regularization."
         ),
     )
+
+
+# ---------------------------------------------------------------------------
+# ComparableFeatureScales (declared by L1Penalty and L2Penalty)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class ComparableFeatureScales:
+    r"""Feature scales are comparable enough for L1/L2 to be meaningful.
+
+    L1 and L2 penalties shrink coefficients toward zero by an amount that
+    does **not** depend on the column's units (ESL §3.4.1). When one
+    feature's standard deviation is orders of magnitude larger than
+    another's, the same lambda imposes very different effective
+    regularisation on the two coefficients, and the resulting fit becomes
+    a function of arbitrary scaling choices rather than the data.
+
+    Statistic
+    ---------
+    .. math::
+
+        \mathrm{ratio} \;=\; \frac{\max_j \mathrm{std}(X_{:,j})}
+                                  {\min_j \mathrm{std}(X_{:,j})}
+
+    taken across the *non-intercept* design columns. Constant columns
+    (std = 0) are excluded from the ratio because the intercept also has
+    std = 0 and a single sentinel comparison is meaningless. The check
+    fires (``passed=False``) when ``ratio > std_ratio_max``.
+
+    Severity
+    --------
+    SOFT — emitting a warning at solve time when the user has supplied an
+    L1 or L2 penalty against features whose scales differ by more than
+    two orders of magnitude (default ``std_ratio_max=100``). The
+    suggestion field tells the user to standardise.
+    """
+
+    std_ratio_max: float = 100.0
+    name: str = "ComparableFeatureScales"
+    severity: Severity = Severity.SOFT
+    requires_solution: bool = False
+    requires_cv: bool = False
+
+    def describe(self) -> str:
+        return (
+            f"max(std)/min(std) across non-intercept feature columns "
+            f"<= {self.std_ratio_max} (ESL §3.4.1 — L1/L2 are scale-sensitive)"
+        )
+
+    def check(
+        self,
+        spec: Any,
+        data: Any,
+        *,
+        solution: Any | None = None,
+        cv: Any | None = None,
+    ) -> CheckResult:
+        X, columns = materialise_design(spec, data)
+        # Per-column std (population sd with ddof=0; the ratio is invariant
+        # to ddof, but ddof=0 avoids NaN when n=1).
+        stds = X.std(axis=0, ddof=0)
+
+        # Identify non-intercept, non-constant columns. The intercept is a
+        # constant column by construction; if any other column has std=0
+        # the user has a degenerate feature and `FullRankDesign` will catch
+        # it as a HARD failure — here we just exclude such columns from
+        # the scale comparison.
+        non_intercept_mask = np.array(
+            [c != "(Intercept)" for c in columns], dtype=bool
+        )
+        positive_std_mask = stds > 0
+        keep = non_intercept_mask & positive_std_mask
+        n_kept = int(keep.sum())
+
+        if n_kept <= 1:
+            # 0 or 1 non-intercept feature: nothing to compare.
+            return CheckResult(
+                name=self.name,
+                severity=self.severity,
+                passed=True,
+                message=(
+                    f"only {n_kept} non-intercept feature column(s); "
+                    "scale comparison is degenerate"
+                ),
+                statistic=None,
+                threshold=self.std_ratio_max,
+                suggestion=None,
+            )
+
+        kept_stds = stds[keep]
+        ratio = float(np.max(kept_stds) / np.min(kept_stds))
+        passed = ratio <= self.std_ratio_max
+        message = (
+            f"feature std ratio = {ratio:.1f} "
+            f"(threshold {self.std_ratio_max:.1f}); "
+            "consider scaling features before applying L1/L2."
+        )
+        return CheckResult(
+            name=self.name,
+            severity=self.severity,
+            passed=passed,
+            message=message,
+            statistic=ratio,
+            threshold=self.std_ratio_max,
+            suggestion=(
+                None
+                if passed
+                else (
+                    "Standardise features (zero mean, unit std) before "
+                    "fitting penalised models — L1/L2 are scale-sensitive "
+                    "(ESL §3.4.1)."
+                )
+            ),
+        )
